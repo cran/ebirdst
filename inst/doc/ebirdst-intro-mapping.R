@@ -1,4 +1,4 @@
-## ----setup, include=FALSE------------------------------------------------
+## ----setup, include=FALSE-----------------------------------------------------
 knitr::opts_chunk$set(warning = FALSE, 
                       message = FALSE,
                       collapse = TRUE,
@@ -10,7 +10,7 @@ knitr::opts_chunk$set(warning = FALSE,
 # only build vignettes locally and not for R CMD check
 knitr::opts_chunk$set(eval = nzchar(Sys.getenv("BUILD_VIGNETTES")))
 
-## ----load_raster_stack---------------------------------------------------
+## ----load_raster_stack--------------------------------------------------------
 #  library(ebirdst)
 #  library(raster)
 #  library(sf)
@@ -22,25 +22,31 @@ knitr::opts_chunk$set(eval = nzchar(Sys.getenv("BUILD_VIGNETTES")))
 #  
 #  # Currently, example data is available on a public s3 bucket. The following
 #  # ebirdst_download() function copies the species results to a selected path and
-#  # returns the full path of the results. Please note that the example_data is
-#  # for Yellow-bellied Sapsucker and has the same run code as the real data,
-#  # so if you download both, make sure you put the example_data somewhere else.
+#  # returns the full path of the results. In this vignette, we'll use example data
+#  # for Yellow-bellied Sapsucker
 #  sp_path <- ebirdst_download(species = "example_data")
 #  
-#  
 #  # load trimmed mean abundances and label dates
-#  abunds <- load_raster("abundance_umean", path = sp_path)
+#  abunds <- load_raster("abundance", path = sp_path)
 #  
 #  # use parse_raster_dates() to get actual date objects for each layer
 #  date_vector <- parse_raster_dates(abunds)
 #  print(date_vector)
 
-## ----project_stack-------------------------------------------------------
+## ----aggregate----------------------------------------------------------------
+#  abunds_low_res <- aggregate(abunds, fact = 3, fun = mean)
+#  # native resolution
+#  res(abunds)
+#  # resolution after aggregation
+#  res(abunds_low_res)
+
+## ----project_stack------------------------------------------------------------
 #  # define mollweide projection
 #  mollweide <- "+proj=moll +lon_0=-90 +x_0=0 +y_0=0 +ellps=WGS84"
 #  
 #  # project single layer from stack to mollweide
 #  week38_moll <- projectRaster(abunds[[38]], crs = mollweide, method = "ngb")
+#  week38_moll <- trim(week38_moll)
 #  
 #  # optionally, you can project an entire stack, but it takes much longer
 #  # abund_moll <- projectRaster(abund, crs = mollweide, method = "ngb")
@@ -52,15 +58,16 @@ knitr::opts_chunk$set(eval = nzchar(Sys.getenv("BUILD_VIGNETTES")))
 #       axes = FALSE, box = FALSE,
 #       maxpixels = ncell(week38_moll))
 
-## ----map_occurrence------------------------------------------------------
-#  occs <- load_raster("occurrence_umean", path = sp_path)
+## ----map_occurrence-----------------------------------------------------------
+#  occs <- load_raster("occurrence", path = sp_path)
 #  
 #  # select a week in the summer
 #  occ <- occs[[26]]
 #  
-#  # create breaks every 0.05 from 0 to 1
-#  occ_bins <- seq(0, 1, by = 0.05)
+#  # create breaks every 0.1 from 0 to 1
+#  occ_bins <- seq(0, 1, by = 0.1)
 #  occ_moll <- projectRaster(occ, crs = mollweide, method = "ngb")
+#  occ_moll <- trim(occ_moll)
 #  
 #  par(mar = c(0, 0, 0, 2), cex = 0.9)
 #  plot(occ_moll,
@@ -70,10 +77,11 @@ knitr::opts_chunk$set(eval = nzchar(Sys.getenv("BUILD_VIGNETTES")))
 #       maxpixels = ncell(occ_moll),
 #       legend.width = 2, legend.shrink = 0.97)
 
-## ----map_linear----------------------------------------------------------
+## ----map_linear---------------------------------------------------------------
 #  year_max <- max(maxValue(abunds), na.rm = TRUE)
 #  
 #  week14_moll <- projectRaster(abunds[[14]], crs = mollweide, method = "ngb")
+#  week14_moll <- trim(week14_moll)
 #  
 #  # set graphical params
 #  par(mfrow = c(1, 2), mar = c(0, 0, 0, 4))
@@ -96,13 +104,13 @@ knitr::opts_chunk$set(eval = nzchar(Sys.getenv("BUILD_VIGNETTES")))
 #       maxpixels = ncell(week14_moll),
 #       axes = FALSE, box = FALSE, legend.shrink = 0.97, add = TRUE)
 
-## ----map_bins------------------------------------------------------------
+## ----map_bins-----------------------------------------------------------------
 #  # calculate ideal color bins for abundance values
 #  year_bins <- calc_bins(abunds)
 #  
 #  # plot
 #  par(mfrow = c(1, 2), mar = c(0, 0, 0, 6))
-#  plot(st_as_sfc(st_bbox(trim(week38_moll))), col = "white", border = "white")
+#  plot(st_as_sfc(st_bbox(week38_moll)), col = "white", border = "white")
 #  plot(week38_moll,
 #       breaks = year_bins$bins,
 #       col = abundance_palette(length(year_bins$bins) - 1, season = "weekly"),
@@ -129,21 +137,22 @@ knitr::opts_chunk$set(eval = nzchar(Sys.getenv("BUILD_VIGNETTES")))
 #       legend.shrink = 0.97, legend.width = 2,
 #       axis.args = list(cex.axis = 0.9, lwd.ticks = 0))
 
-## ----map_w_es, out.width = NULL------------------------------------------
+## ----map_w_es, out.width = NULL-----------------------------------------------
 #  # to add context, let's pull in some reference data to add
 #  wh_states <- ne_states(country = c("United States of America", "Canada"),
 #                      returnclass = "sf") %>%
 #    st_transform(crs = mollweide) %>%
 #    st_geometry()
 #  
-#  # well plot a week in the middle of summer
+#  # we'll plot a week in the middle of summer
 #  week26_moll <- projectRaster(abunds[[26]], crs = mollweide, method = "ngb")
+#  week26_moll <- trim(week26_moll)
 #  
 #  # set graphics params
 #  par(mfrow = c(1, 1), mar = c(0, 0, 0, 6))
 #  
 #  # use the extent object to set the spatial extent for the plot
-#  plot(st_as_sfc(st_bbox(trim(week26_moll))), col = "white", border = "white")
+#  plot(st_as_sfc(st_bbox(week26_moll)), col = "white", border = "white")
 #  
 #  # add background spatial context
 #  plot(wh_states, col = "#eeeeee", border = NA, add = TRUE)
@@ -187,7 +196,7 @@ knitr::opts_chunk$set(eval = nzchar(Sys.getenv("BUILD_VIGNETTES")))
 #  # add state boundaries on top
 #  plot(wh_states, border = "white", lwd = 1.5, add = TRUE)
 
-## ----map_confidence_band-------------------------------------------------
+## ----map_confidence_band------------------------------------------------------
 #  # load lower and upper stacks
 #  # load trimmed mean abundances and label dates
 #  lower <- load_raster("abundance_lower", path = sp_path)
@@ -203,7 +212,7 @@ knitr::opts_chunk$set(eval = nzchar(Sys.getenv("BUILD_VIGNETTES")))
 #       maxpixel = ncell(conf_week26),
 #       axes = FALSE, box = FALSE)
 
-## ----trajectories--------------------------------------------------------
+## ----trajectories-------------------------------------------------------------
 #  # set a point
 #  pt <- st_point(c(-88.1, 46.7)) %>%
 #    st_sfc(crs = 4326) %>%
@@ -226,11 +235,11 @@ knitr::opts_chunk$set(eval = nzchar(Sys.getenv("BUILD_VIGNETTES")))
 #    geom_ribbon(data = plot_frame,
 #                aes(ymin = lower, ymax = upper),
 #                alpha = 0.3) +
-#    ylab("Expected Count (count/(km hr))") +
+#    ylab("Expected Count") +
 #    xlab("Week") +
 #    theme_light()
 
-## ----trajectories_region-------------------------------------------------
+## ----trajectories_region------------------------------------------------------
 #  # set an extent based on polygon
 #  mi <- ne_states(country = "United States of America", returnclass = "sf") %>%
 #    st_transform(crs = projection(abunds))
@@ -258,7 +267,7 @@ knitr::opts_chunk$set(eval = nzchar(Sys.getenv("BUILD_VIGNETTES")))
 #    geom_ribbon(data = plot_frame,
 #                aes(ymin = lower, ymax =upper),
 #                alpha = 0.3) +
-#    ylab("Expected Count (count/(km hr))") +
+#    ylab("Expected Count") +
 #    xlab("Week") +
 #    theme_light()
 

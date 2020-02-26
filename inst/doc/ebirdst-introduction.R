@@ -1,4 +1,4 @@
-## ----setup, include=FALSE------------------------------------------------
+## ----setup, include=FALSE-----------------------------------------------------
 knitr::opts_chunk$set(warning = FALSE, 
                       message = FALSE,
                       collapse = TRUE,
@@ -10,7 +10,7 @@ knitr::opts_chunk$set(warning = FALSE,
 # only build vignettes locally and not for R CMD check
 knitr::opts_chunk$set(eval = nzchar(Sys.getenv("BUILD_VIGNETTES")))
 
-## ----quick_start---------------------------------------------------------
+## ----quick_start--------------------------------------------------------------
 #  library(ebirdst)
 #  
 #  # download data
@@ -20,11 +20,11 @@ knitr::opts_chunk$set(eval = nzchar(Sys.getenv("BUILD_VIGNETTES")))
 #  # rappdirs::user_data_dir("ebirdst"))
 #  sp_path <- ebirdst_download(species = "example_data")
 
-## ----conversion----------------------------------------------------------
+## ----conversion---------------------------------------------------------------
 #  library(raster)
 #  
 #  # load trimmed mean abundances
-#  abunds <- load_raster("abundance_umean", path = sp_path)
+#  abunds <- load_raster("abundance", path = sp_path)
 #  
 #  # use parse_raster_dates() to get actual date objects for each layer
 #  date_vector <- parse_raster_dates(abunds)
@@ -39,6 +39,6 @@ knitr::opts_chunk$set(eval = nzchar(Sys.getenv("BUILD_VIGNETTES")))
 #  colnames(p) <- c("longitude", "latitude", "abundance_umean")
 #  head(p)
 
-## ----conversion_write, eval = FALSE--------------------------------------
+## ----conversion_write, eval = FALSE-------------------------------------------
 #  write.csv(p, file = "yebsap_week26.csv", row.names = FALSE)
 

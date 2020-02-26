@@ -7,7 +7,7 @@ lp_extent <- ebirdst_extent(c(xmin = -86, xmax = -83, ymin = 42, ymax = 45),
 context("calc_full_extent")
 
 test_that("ebirdst calc_full_extent", {
-  abund <- load_raster("abundance_umean", sp_path)
+  abund <- load_raster("abundance", sp_path)
   abund <- ebirdst_subset(abund, lp_extent)
 
   # expected RasterStack
@@ -30,16 +30,21 @@ test_that("ebirdst calc_full_extent", {
 context("calc_bins")
 
 test_that("ebirdst calc_bins", {
-  abund <- load_raster("abundance_umean", sp_path)
+  abund <- load_raster("abundance", sp_path)
   abund <- ebirdst_subset(abund, lp_extent)
 
   # expect a list greater than 1 for RasterStack
   expect_length(calc_bins(abund), 2)
   expect_named(calc_bins(abund), c("bins", "power"))
+  expect_length(calc_bins(abund, method = "quantile"), 2)
+  expect_named(calc_bins(abund, method = "quantile"), c("bins", "power"))
+  expect_null(calc_bins(abund, method = "quantile")$power)
 
   # expect a list greater than 1 for RasterLayer
   expect_length(calc_bins(abund[[2]]), 2)
   expect_named(calc_bins(abund[[2]]), c("bins", "power"))
+  expect_length(calc_bins(abund[[2]], method = "quantile"), 2)
+  expect_named(calc_bins(abund[[2]], method = "quantile"), c("bins", "power"))
 
   # projected
   mollweide <- "+proj=moll +lon_0=-90 +x_0=0 +y_0=0 +ellps=WGS84"

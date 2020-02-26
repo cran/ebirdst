@@ -1,4 +1,4 @@
-## ----setup, include=FALSE------------------------------------------------
+## ----setup, include=FALSE-----------------------------------------------------
 knitr::opts_chunk$set(warning = FALSE, 
                       message = FALSE,
                       collapse = TRUE,
@@ -10,7 +10,7 @@ knitr::opts_chunk$set(warning = FALSE,
 # only build vignettes local and not for R CMD check
 knitr::opts_chunk$set(eval = nzchar(Sys.getenv("BUILD_VIGNETTES")))
 
-## ----libraries-----------------------------------------------------------
+## ----libraries----------------------------------------------------------------
 #  library(ebirdst)
 #  library(raster)
 #  library(velox)
@@ -24,15 +24,15 @@ knitr::opts_chunk$set(eval = nzchar(Sys.getenv("BUILD_VIGNETTES")))
 #  # resolve namespace conflicts
 #  select <- dplyr::select
 
-## ----st-download---------------------------------------------------------
+## ----st-download--------------------------------------------------------------
 #  # download to a temp directory for the vigette
 #  # in practice, change to permanent directory the status and trends downloads
 #  sp_path <- ebirdst_download(species = "example_data")
 #  # load the abundance data
 #  # this automaticaaly labels layers with their dates
-#  abd <- load_raster("abundance_umean", path = sp_path)
+#  abd <- load_raster("abundance", path = sp_path)
 
-## ----ne-data, results="hide"---------------------------------------------
+## ----ne-data, results="hide"--------------------------------------------------
 #  mollweide <- "+proj=moll +lon_0=-90 +x_0=0 +y_0=0 +ellps=WGS84"
 #  ne_scale <- 50
 #  
@@ -73,7 +73,7 @@ knitr::opts_chunk$set(eval = nzchar(Sys.getenv("BUILD_VIGNETTES")))
 #    wh_subset()
 #  ne_land <- st_transform(ne_land, crs = mollweide)
 
-## ----season-defs---------------------------------------------------------
+## ----season-defs--------------------------------------------------------------
 #  # subset to the yellow-bellied sapsucker season definitions
 #  yebsap_dates <- filter(ebirdst_runs, species_code == "yebsap") %>%
 #    # just keep the seasonal definition columns
@@ -88,7 +88,7 @@ knitr::opts_chunk$set(eval = nzchar(Sys.getenv("BUILD_VIGNETTES")))
 #  yebsap_dates <- mutate(yebsap_dates, pass = !(is.na(start_dt) | is.na(end_dt)))
 #  yebsap_dates
 
-## ----season-assignment---------------------------------------------------
+## ----season-assignment--------------------------------------------------------
 #  # dates for each abundance layer
 #  weeks <- parse_raster_dates(abd)
 #  # assign to seasons
@@ -109,7 +109,7 @@ knitr::opts_chunk$set(eval = nzchar(Sys.getenv("BUILD_VIGNETTES")))
 #  }
 #  table(weeks_season)
 
-## ----seasonal-average----------------------------------------------------
+## ----seasonal-average---------------------------------------------------------
 #  # drop weeks not assigned to season
 #  week_pass <- !is.na(weeks_season)
 #  abd <- abd[[which(week_pass)]]
@@ -125,7 +125,7 @@ knitr::opts_chunk$set(eval = nzchar(Sys.getenv("BUILD_VIGNETTES")))
 #    setNames(seasons)
 #  abd_season
 
-## ----split-seasons-------------------------------------------------------
+## ----split-seasons------------------------------------------------------------
 #  migration_threshold <- 0.4
 #  mig_seasons <- c("prebreeding_migration", "postbreeding_migration")
 #  if (all(mig_seasons %in% names(abd_season))) {
@@ -148,7 +148,7 @@ knitr::opts_chunk$set(eval = nzchar(Sys.getenv("BUILD_VIGNETTES")))
 #  n_just / n_all
 #  split_migration
 
-## ----show-yr-------------------------------------------------------------
+## ----show-yr------------------------------------------------------------------
 #  threshold_yearround <- 0.01
 #  # decide whether to show year-round layer
 #  if (nlayers(abd_season) == 4) {
@@ -167,10 +167,10 @@ knitr::opts_chunk$set(eval = nzchar(Sys.getenv("BUILD_VIGNETTES")))
 #  }
 #  show_yearround
 
-## ----breaks--------------------------------------------------------------
+## ----breaks-------------------------------------------------------------------
 #  bin_breaks <- calc_bins(abd_season)
 
-## ----abd-map-------------------------------------------------------------
+## ----abd-map------------------------------------------------------------------
 #  # project the abundance data to mollweide
 #  # use nearest neighbour resampling to preserve true zeros
 #  abd_season_proj <- projectRaster(abd_season, crs = mollweide, method = "ngb")
@@ -269,10 +269,10 @@ knitr::opts_chunk$set(eval = nzchar(Sys.getenv("BUILD_VIGNETTES")))
 #                     legend.args = list(text = legend_title, side = 3,
 #                                        cex = 0.9, col = "black", line = 0.1))
 #  }
-#  title("Yellow-bellied Sapsucker Relative Abundance (birds per km/hr)",
+#  title("Yellow-bellied Sapsucker Relative Abundance",
 #        line = -1, cex.main = 1)
 
-## ----raster-to-polygon---------------------------------------------------
+## ----raster-to-polygon--------------------------------------------------------
 #  # aggregate
 #  abd_season_agg <- aggregate(abd_season_proj, fact = 3)
 #  # raster to polygon, one season at a time
@@ -307,7 +307,7 @@ knitr::opts_chunk$set(eval = nzchar(Sys.getenv("BUILD_VIGNETTES")))
 #  row.names(range) <- NULL
 #  print(range)
 
-## ----smoothr-------------------------------------------------------------
+## ----smoothr------------------------------------------------------------------
 #  # clean and smooth
 #  cell_area <- (1.5 * prod(res(abd_season_agg)))
 #  range_smooth <- range %>%
@@ -323,7 +323,7 @@ knitr::opts_chunk$set(eval = nzchar(Sys.getenv("BUILD_VIGNETTES")))
 #    st_intersection(range_split$range, ne_land_buffer),
 #    st_intersection(range_split$prediction_area, ne_land))
 
-## ----range-map-----------------------------------------------------------
+## ----range-map----------------------------------------------------------------
 #  # range map color palette
 #  range_palette <- c(nonbreeding = "#1d6996",
 #                     prebreeding_migration = "#73af48",
@@ -385,7 +385,7 @@ knitr::opts_chunk$set(eval = nzchar(Sys.getenv("BUILD_VIGNETTES")))
 #  title("Yellow-bellied Sapsucker Seasonal Range Map",
 #        line = -1, cex.main = 1)
 
-## ----counties------------------------------------------------------------
+## ----counties-----------------------------------------------------------------
 #  mi_counties <- getData("GADM", country = "USA", level = 2, path = tempdir()) %>%
 #    st_as_sf() %>%
 #    filter(NAME_1 == "Michigan") %>%
@@ -394,11 +394,11 @@ knitr::opts_chunk$set(eval = nzchar(Sys.getenv("BUILD_VIGNETTES")))
 #    # remove lakes which aren't true counties
 #    filter(county_code != "US.MI.WB")
 
-## ----aggregate-----------------------------------------------------------
+## ----aggregate----------------------------------------------------------------
 #  abd_season_agg <- aggregate(abd_season, fact = 3, fun = mean, na.rm = TRUE)
 #  abd_agg <- aggregate(abd, fact = 3, fun = mean, na.rm = TRUE)
 
-## ----mean-rel-abd--------------------------------------------------------
+## ----mean-rel-abd-------------------------------------------------------------
 #  vx <- velox(abd_season_agg)
 #  abd_mean_region <- vx$extract(mi_counties,
 #                                fun = function(x) {mean(x, na.rm = TRUE)},
@@ -413,7 +413,7 @@ knitr::opts_chunk$set(eval = nzchar(Sys.getenv("BUILD_VIGNETTES")))
 #    gather(season, mean_abundance, -county_code)
 #  head(abd_mean_region)
 
-## ----mean-rel-abd-map----------------------------------------------------
+## ----mean-rel-abd-map---------------------------------------------------------
 #  # join back to county boundaries
 #  abd_mean_proj <- abd_mean_region %>%
 #    inner_join(mi_counties, ., by = "county_code") %>%
@@ -432,7 +432,7 @@ knitr::opts_chunk$set(eval = nzchar(Sys.getenv("BUILD_VIGNETTES")))
 #    theme_bw() +
 #    theme(legend.position = "bottom")
 
-## ----week-occ------------------------------------------------------------
+## ----week-occ-----------------------------------------------------------------
 #  threshold_occupied <- 0.05
 #  
 #  # weekly percent occupied
@@ -452,7 +452,7 @@ knitr::opts_chunk$set(eval = nzchar(Sys.getenv("BUILD_VIGNETTES")))
 #    bind_rows() %>%
 #    mutate(occupied = (pct_occupied > threshold_occupied))
 
-## ----day-occ-------------------------------------------------------------
+## ----day-occ------------------------------------------------------------------
 #  days_occupation <- week_occupied %>%
 #    group_by(county_code, season) %>%
 #    summarise(weeks_occ = sum(occupied)) %>%
@@ -461,7 +461,7 @@ knitr::opts_chunk$set(eval = nzchar(Sys.getenv("BUILD_VIGNETTES")))
 #    select(county_code, season, days_occ)
 #  head(days_occupation)
 
-## ----day-occ-map---------------------------------------------------------
+## ----day-occ-map--------------------------------------------------------------
 #  # join back to county boundaries
 #  days_occ_proj <- days_occupation %>%
 #    inner_join(mi_counties, ., by = "county_code") %>%
