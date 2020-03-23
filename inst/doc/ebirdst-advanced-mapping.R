@@ -13,7 +13,6 @@ knitr::opts_chunk$set(eval = nzchar(Sys.getenv("BUILD_VIGNETTES")))
 ## ----libraries----------------------------------------------------------------
 #  library(ebirdst)
 #  library(raster)
-#  library(velox)
 #  library(sf)
 #  library(smoothr)
 #  library(rnaturalearth)
@@ -399,10 +398,8 @@ knitr::opts_chunk$set(eval = nzchar(Sys.getenv("BUILD_VIGNETTES")))
 #  abd_agg <- aggregate(abd, fact = 3, fun = mean, na.rm = TRUE)
 
 ## ----mean-rel-abd-------------------------------------------------------------
-#  vx <- velox(abd_season_agg)
-#  abd_mean_region <- vx$extract(mi_counties,
-#                                fun = function(x) {mean(x, na.rm = TRUE)},
-#                                df = TRUE) %>%
+#  abd_mean_region <- raster::extract(abd_season_agg, mi_counties,
+#                                     fun = mean, df = TRUE) %>%
 #    # assign season names
 #    setNames(c("id", names(abd_season_agg))) %>%
 #    # attach county attributes
@@ -437,15 +434,15 @@ knitr::opts_chunk$set(eval = nzchar(Sys.getenv("BUILD_VIGNETTES")))
 #  
 #  # weekly percent occupied
 #  calc_week_occupied <- function(wk) {
-#    vx <- velox(abd_agg[[wk]])
-#    vx$extract(mi_counties,
-#               fun = function(x) {sum(x > 0, na.rm = TRUE) / length(x)},
-#               df = TRUE) %>%
+#    raster::extract(abd_agg[[wk]], mi_counties,
+#                    fun = function(x, ...) {sum(x > 0, na.rm = TRUE) / length(x)},
+#                    df = TRUE) %>%
+#      setNames(c("id", "pct_occupied")) %>%
 #      # assign week, season, and county
 #      transmute(week_date = weeks[wk],
 #                season = weeks_season[wk],
 #                county_code = mi_counties$county_code,
-#                pct_occupied = coalesce(out, 0))
+#                pct_occupied = coalesce(pct_occupied, 0))
 #  }
 #  # process weeks independently otherwise we'll run into memory issues
 #  week_occupied <- lapply(seq_len(nlayers(abd_agg)), calc_week_occupied) %>%

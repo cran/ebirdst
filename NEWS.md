@@ -1,3 +1,11 @@
+# ebirdst 0.2.1
+
+- bug fix: corrected date types in seasonal definitions
+- bug fix: fixed possibility that ebirdst_extent could produce invalid date (day 366 of 2015)
+- added import of pipe operator
+- `velox` was archived, removed dependency from Suggests
+- `fasterize` was archived, removed dependency from Imports
+
 # ebirdst 0.2.0
 
 - change maintainer to Matthew Strimas-Mackey
