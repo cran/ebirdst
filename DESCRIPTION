@@ -1,7 +1,7 @@
 Type: Package
 Package: ebirdst
 Title: Access and Analyze eBird Status and Trends Data
-Version: 0.2.1
+Version: 0.2.2
 Authors@R: 
     c(person(given = "Matthew",
              family = "Strimas-Mackey",
@@ -23,7 +23,7 @@ Authors@R:
 Description: Tools to download, map, plot and analyze eBird
     Status and Trends data
     (<https://ebird.org/science/status-and-trends>). eBird
-    (<https://ebird.org>) is a global database of bird observations
+    (<https://ebird.org/home>) is a global database of bird observations
     collected by citizen scientists. eBird Status and Trends uses these
     data to analyze continental bird abundances, range boundaries,
     habitats, and trends.
@@ -32,17 +32,16 @@ URL: https://github.com/CornellLabofOrnithology/ebirdst
 BugReports: https://github.com/CornellLabofOrnithology/ebirdst/issues
 Depends: R (>= 3.3.0)
 Imports: car, data.table, dplyr (>= 0.7.0), ggplot2, grDevices,
-        gridExtra, magrittr, methods, mgcv, PresenceAbsence, rappdirs,
-        raster, rgdal, rlang, scales, sf, stats, stringr, tidyr (>=
-        1.0.0), tools, utils, viridisLite, xml2
+        gridExtra, magrittr, PresenceAbsence, rappdirs, raster, rlang,
+        sf, stats, stringr, tidyr (>= 1.0.0), utils, viridisLite, xml2
 Suggests: covr, fields, knitr, rmarkdown, rnaturalearth, smoothr,
         testthat
 VignetteBuilder: knitr
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
 NeedsCompilation: no
-Packaged: 2020-03-23 21:29:49 UTC; mes335
+Packaged: 2021-01-16 04:25:09 UTC; mes335
 Author: Matthew Strimas-Mackey [aut, cre]
     (<https://orcid.org/0000-0001-8929-7776>),
   Tom Auer [aut] (<https://orcid.org/0000-0001-8619-7147>),
@@ -50,4 +49,4 @@ Author: Matthew Strimas-Mackey [aut, cre]
   Cornell Lab of Ornithology [cph]
 Maintainer: Matthew Strimas-Mackey <mes335@cornell.edu>
 Repository: CRAN
-Date/Publication: 2020-03-23 22:12:05 UTC
+Date/Publication: 2021-01-16 05:40:11 UTC

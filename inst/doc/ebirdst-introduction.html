@@ -12,27 +12,48 @@
 
 <meta name="author" content="Tom Auer, Daniel Fink" />
 
-<meta name="date" content="2020-03-23" />
+<meta name="date" content="2021-01-15" />
 
 <title>Background, Data Access, and Data Structure</title>
 
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
 
 
 <style type="text/css">code{white-space: pre;}</style>
 <style type="text/css" data-origin="pandoc">
-code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
-code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode { white-space: pre; position: relative; }
 div.sourceCode { margin: 1em 0; }
 pre.sourceCode { margin: 0; }
 @media screen {
 div.sourceCode { overflow: auto; }
 }
 @media print {
-code.sourceCode { white-space: pre-wrap; }
-code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
   { counter-reset: source-line 0; }
@@ -52,7 +73,7 @@ pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-le
 div.sourceCode
   {   }
 @media screen {
-code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 code span.al { color: #ff0000; font-weight: bold; } /* Alert */
 code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
@@ -106,6 +127,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   }
 })();
 </script>
+
 
 
 
@@ -303,7 +325,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">Background, Data Access, and Data Structure</h1>
 <h4 class="author">Tom Auer, Daniel Fink</h4>
-<h4 class="date">2020-03-23</h4>
+<h4 class="date">2021-01-15</h4>
 
 
 
@@ -324,25 +346,24 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 </div>
 <div id="background" class="section level1">
 <h1>Background</h1>
-<p>The study and conservation of the natural world relies on detailed information about species’ distributions, abundances, environmental associations, and population trends over time. For many taxa, this information is challenging to obtain at relevant geographic scales. The goal of the eBird Status and Trends project is to use data from <a href="https://eBird.org">eBird</a>, the global citizen science bird monitoring administered by Cornell Lab of Ornithology, to generate a reliable, standardized source of biodiversity information for the world’s bird populations. To translate the eBird observations into robust data products, we use statistical models to fill spatiotemporal gaps, using local land cover descriptions derived from NASA MODIS and other remote sensing data, while controlling for biases inherent in species observations collected by volunteers.</p>
+<p>The study and conservation of the natural world relies on detailed information about species’ distributions, abundances, environmental associations, and population trends over time. For many taxa, this information is challenging to obtain at relevant geographic scales. The goal of the eBird Status and Trends project is to use data from <a href="https://ebird.org/home">eBird</a>, the global citizen science bird monitoring administered by Cornell Lab of Ornithology, to generate a reliable, standardized source of biodiversity information for the world’s bird populations. To translate the eBird observations into robust data products, we use statistical models to fill spatiotemporal gaps, using local land cover descriptions derived from NASA MODIS and other remote sensing data, while controlling for biases inherent in species observations collected by volunteers.</p>
 <p>This data set provides estimates of the year-round distribution, abundances, and environmental associations for a the majority of North American bird species in 2018. For each species, distribution and abundance estimates are available for all 52 weeks of the year across a regular grid of locations that cover terrestrial North and South America at a resolution of 2.96 km x 2.96 km. Variation in detectability associated with the search effort is controlled by standardizing the estimates as the expected occupancy rate and count of the species on a search conducted for one hour while traveling 1 km at the optimal time of day for detection of that species, on the given day at the given location by a skilled eBirder. To describe how each species is associated with features of its local environment, estimates of the relative importance each remote sensed variable (e.g. land cover, elevation, etc), are available throughout the year at a monthly temporal and regional spatial resolution. Additionally, to assess estimate quality, we provide upper and lower confidence bounds for all abundance estimates and we provide regional-seasonal scale validation metrics for the underlying statistical models. For more information about the data products see the <a href="https://ebird.org/science/status-and-trends">FAQ and summaries</a>. See Fink et al. (2019) for more information about the analysis used to generate these data.</p>
 </div>
 <div id="data-access" class="section level1">
 <h1>Data Access</h1>
 <p>eBird Status and Trends data are stored in the cloud on <a href="https://registry.opendata.aws/ebirdst/">Amazon Web Services</a> and accessible for download using the function <code>ebirdst_download()</code>.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">library</span>(ebirdst)</span>
-<span id="cb1-2"><a href="#cb1-2"></a></span>
-<span id="cb1-3"><a href="#cb1-3"></a><span class="co"># download data</span></span>
-<span id="cb1-4"><a href="#cb1-4"></a><span class="co"># download a simplified example dataset from aws s3</span></span>
-<span id="cb1-5"><a href="#cb1-5"></a><span class="co"># example data are for Yellow-bellied Sapsucker in Michigan</span></span>
-<span id="cb1-6"><a href="#cb1-6"></a><span class="co"># by default file will be stored in a persistent data directory:</span></span>
-<span id="cb1-7"><a href="#cb1-7"></a><span class="co"># rappdirs::user_data_dir(&quot;ebirdst&quot;))</span></span>
-<span id="cb1-8"><a href="#cb1-8"></a>sp_path &lt;-<span class="st"> </span><span class="kw">ebirdst_download</span>(<span class="dt">species =</span> <span class="st">&quot;example_data&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ebirdst)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># download data</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># download a simplified example dataset from aws s3</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># example data are for Yellow-bellied Sapsucker in Michigan</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># by default file will be stored in a persistent data directory:</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># rappdirs::user_data_dir(&quot;ebirdst&quot;))</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>sp_path <span class="ot">&lt;-</span> <span class="fu">ebirdst_download</span>(<span class="at">species =</span> <span class="st">&quot;example_data&quot;</span>)</span></code></pre></div>
 <p>Throughout this vignette, a simplified example dataset is used consisting of Yellow-bellied Sapsucker in Michigan. For a full list of the species available for download, look at the data frame <code>ebirst_runs</code>, which is included in this package.</p>
 <div id="access-from-amazon-web-services" class="section level2">
 <h2>Access from Amazon Web Services</h2>
 <p>The eBird Status and Trends data are stored in the cloud using <a href="https://aws.amazon.com/">Amazon Web Services (AWS)</a> object storage service, <a href="https://aws.amazon.com/s3/">S3</a>. AWS also provides access to flexible cloud computing resources in the form of <a href="https://aws.amazon.com/ec2/">EC2</a> instances. Users may want to considering analyzing Status and Trends data using an AWS EC2 instance because data transfer will be extremely fast between S3 and EC2 compared to downloading the data to a local machine. An additional benefit of using EC2 for analyses is access to instances with more powerful computing resources than a desktop or laptop. Working with the Status and Trends data can be extremely memory intensive, due to their high spatial and temporal resolution, so these additional resources can significantly speed up analyses.</p>
-<p>For instruction on how to set up RStudio on an AWS EC2 instance consult <a href="http://www.louisaslett.com/RStudio_AMI/">Louis Aslett’s detailed guide</a>. After following these instructions, you will be able to log in to an RStudio session in the cloud using your web browser. Within this RStudio session, run <code>install.packages(&quot;ebirdst&quot;)</code> to install the <code>ebirdst</code> package. You should now be able to work with eBird Status and Trends data in the cloud on AWS.</p>
 </div>
 </div>
 <div id="data-types-and-structure" class="section level1">
@@ -442,25 +463,25 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <div id="conversion-to-flat-format" class="section level1">
 <h1>Conversion to Flat Format</h1>
 <p>The <code>raster</code> package has a lot of functionality and the <code>RasterLayer</code> format is useful for spatial analysis and mapping, but some users do not have GIS experience or want the data in a simpler format for their preferred method of analysis. There are multiple ways to get more basic representations of the data.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">library</span>(raster)</span>
-<span id="cb2-2"><a href="#cb2-2"></a></span>
-<span id="cb2-3"><a href="#cb2-3"></a><span class="co"># load trimmed mean abundances</span></span>
-<span id="cb2-4"><a href="#cb2-4"></a>abunds &lt;-<span class="st"> </span><span class="kw">load_raster</span>(<span class="st">&quot;abundance&quot;</span>, <span class="dt">path =</span> sp_path)</span>
-<span id="cb2-5"><a href="#cb2-5"></a></span>
-<span id="cb2-6"><a href="#cb2-6"></a><span class="co"># use parse_raster_dates() to get actual date objects for each layer</span></span>
-<span id="cb2-7"><a href="#cb2-7"></a>date_vector &lt;-<span class="st"> </span><span class="kw">parse_raster_dates</span>(abunds)</span>
-<span id="cb2-8"><a href="#cb2-8"></a></span>
-<span id="cb2-9"><a href="#cb2-9"></a><span class="co"># to convert the data to a simpler geographic format and access tabularly   </span></span>
-<span id="cb2-10"><a href="#cb2-10"></a><span class="co"># reproject into geographic (decimal degrees) </span></span>
-<span id="cb2-11"><a href="#cb2-11"></a>abund_stack_ll &lt;-<span class="st"> </span><span class="kw">projectRaster</span>(abunds[[<span class="dv">26</span>]], <span class="dt">crs =</span> <span class="st">&quot;+init=epsg:4326&quot;</span>, </span>
-<span id="cb2-12"><a href="#cb2-12"></a>                                <span class="dt">method =</span> <span class="st">&quot;ngb&quot;</span>)</span>
-<span id="cb2-13"><a href="#cb2-13"></a></span>
-<span id="cb2-14"><a href="#cb2-14"></a><span class="co"># Convert raster object into a matrix</span></span>
-<span id="cb2-15"><a href="#cb2-15"></a>p &lt;-<span class="st"> </span><span class="kw">rasterToPoints</span>(abund_stack_ll)</span>
-<span id="cb2-16"><a href="#cb2-16"></a><span class="kw">colnames</span>(p) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;longitude&quot;</span>, <span class="st">&quot;latitude&quot;</span>, <span class="st">&quot;abundance_umean&quot;</span>)</span>
-<span id="cb2-17"><a href="#cb2-17"></a><span class="kw">head</span>(p)</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(raster)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># load trimmed mean abundances</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>abunds <span class="ot">&lt;-</span> <span class="fu">load_raster</span>(<span class="st">&quot;abundance&quot;</span>, <span class="at">path =</span> sp_path)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co"># use parse_raster_dates() to get actual date objects for each layer</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>date_vector <span class="ot">&lt;-</span> <span class="fu">parse_raster_dates</span>(abunds)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co"># to convert the data to a simpler geographic format and access tabularly   </span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co"># reproject into geographic (decimal degrees) </span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>abund_stack_ll <span class="ot">&lt;-</span> <span class="fu">projectRaster</span>(abunds[[<span class="dv">26</span>]], <span class="at">crs =</span> <span class="st">&quot;+init=epsg:4326&quot;</span>, </span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>                                <span class="at">method =</span> <span class="st">&quot;ngb&quot;</span>)</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert raster object into a matrix</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>p <span class="ot">&lt;-</span> <span class="fu">rasterToPoints</span>(abund_stack_ll)</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(p) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;longitude&quot;</span>, <span class="st">&quot;latitude&quot;</span>, <span class="st">&quot;abundance_umean&quot;</span>)</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(p)</span></code></pre></div>
 <p>These results can then be written to CSV.</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a><span class="kw">write.csv</span>(p, <span class="dt">file =</span> <span class="st">&quot;yebsap_week26.csv&quot;</span>, <span class="dt">row.names =</span> <span class="ot">FALSE</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(p, <span class="at">file =</span> <span class="st">&quot;yebsap_week26.csv&quot;</span>, <span class="at">row.names =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
 <div id="references" class="section level2">
 <h2>References</h2>
 <p>Fink, D., T. Auer, A. Johnston, V. Ruiz‐Gutierrez, W.M. Hochachka, S. Kelling. 2019. Modeling avian full annual cycle distribution and population trends with citizen science data. Ecological Applications, 00(00):e02056. <a href="https://doi.org/10.1002/eap.2056" class="uri">https://doi.org/10.1002/eap.2056</a></p>

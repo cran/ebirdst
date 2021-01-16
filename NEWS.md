@@ -1,3 +1,8 @@
+# ebirdst 0.2.2
+
+- add support for variable ensemble support in `compute_ppms()`
+- wrap all examples in dontrun to avoid writing files when compiling package
+
 # ebirdst 0.2.1
 
 - bug fix: corrected date types in seasonal definitions

@@ -10,6 +10,8 @@
 #'   Trends products for a single species.
 #' @param ext [ebirdst_extent] object (optional); the spatiotemporal extent to
 #'   filter the data to.
+#' @param es_cutoff integer between 0-100; the ensemble support cutoff to use in
+#'   distinguishing zero and non-zero predictions.
 #'
 #' @return A list of three data frames: `binary_ppms`, `occ_ppms`, and
 #'   `abd_ppms`. These data frames have 25 rows corresponding to 25 Monte Carlo
@@ -24,22 +26,24 @@
 #'
 #' @export
 #'
-#' @examples
+#' @examples \dontrun{
 #' # download and load example data
 #' sp_path <- ebirdst_download("example_data", tifs_only = FALSE)
 #'
 #' # define a spatiotemporal extent to plot
 #' bb_vec <- c(xmin = -86, xmax = -83, ymin = 42.5, ymax = 44.5)
 #' e <- ebirdst_extent(bb_vec, t = c("05-01", "05-31"))
-#' \dontrun{
+#'
 #' # compute predictive performance metrics
 #' ppms <- compute_ppms(path = sp_path, ext = e)
 #' }
-compute_ppms <- function(path, ext) {
+compute_ppms <- function(path, ext, es_cutoff = 75) {
   stopifnot(is.character(path), length(path) == 1, dir.exists(path))
   if (!missing(ext)) {
     stopifnot(inherits(ext, "ebirdst_extent"))
   }
+  stopifnot(is.numeric(es_cutoff), length(es_cutoff) == 1,
+            es_cutoff > 0, es_cutoff < 100)
 
   # load the test data and assign names
   ppm_data <- load_test_preds(path = path)
@@ -90,8 +94,8 @@ compute_ppms <- function(path, ext) {
 
   # compute monte carlo sample of ppms for spatiotemporal subset
   # split data into within range and out of range
-  ppm_data_zeroes <- ppm_data[ppm_data$pi_es < 75 | is.na(ppm_data$pi_es), ]
-  ppm_data <- ppm_data[ppm_data$pi_es >= 75, ]
+  ppm_data_zeroes <- ppm_data[ppm_data$pi_es < es_cutoff | is.na(ppm_data$pi_es), ]
+  ppm_data <- ppm_data[ppm_data$pi_es >= es_cutoff, ]
 
   if (nrow(ppm_data) == 0) {
     warning("No predicted occurrences within spatiotemporal extent.")
@@ -258,14 +262,14 @@ compute_ppms <- function(path, ext) {
 #'
 #' @export
 #'
-#' @examples
+#' @examples \dontrun{
 #' # download and load example data
 #' sp_path <- ebirdst_download("example_data", tifs_only = FALSE)
 #'
 #' # define a spatiotemporal extent to plot data from
 #' bb_vec <- c(xmin = -86, xmax = -83, ymin = 42.5, ymax = 44.5)
 #' e <- ebirdst_extent(bb_vec, t = c("04-01", "06-30"))
-#' \donttest{
+#'
 #' # plot monthly kappa
 #' plot_binary_by_time(path = sp_path, metric = "kappa",
 #'                     ext = e, n_time_periods = 4)
@@ -342,14 +346,14 @@ plot_binary_by_time <- function(path,
 #'
 #' @export
 #'
-#' @examples
+#' @examples \dontrun{
 #' # download example data
 #' sp_path <- ebirdst_download("example_data", tifs_only = FALSE)
 #'
 #' # define a spatiotemporal extent to plot data from
 #' bb_vec <- c(xmin = -86, xmax = -83, ymin = 42.5, ymax = 44.5)
 #' e <- ebirdst_extent(bb_vec, t = c("04-01", "06-30"))
-#' \donttest{
+#'
 #' # plot ppms within extent
 #' plot_all_ppms(path = sp_path, ext = e)
 #' }
