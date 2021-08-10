@@ -1,80 +1,39 @@
-context("Loading and subsetting functions")
-skip_on_cran()
-options(warn = -1)
+context("Loading functions")
 
-sp_path <- ebirdst_download("example_data", tifs_only = FALSE)
-lp_extent <- ebirdst_extent(c(xmin = -86, xmax = -83, ymin = 42, ymax = 45),
-                            t = c(0.5, 0.6))
+path <- ebirdst_download("example_data", tifs_only = TRUE)
 
-test_that("subset raster", {
-  #skip_on_cran()
-  abunds <- suppressWarnings(load_raster("abundance", sp_path))
-  #abunds <- raster::stack(f_dl)
-  expect_is(abunds, "RasterStack")
-
-  abund_sub <- ebirdst_subset(abunds, lp_extent)
-
-  # expected
-  # number of layers
-  # check type
-  # number of cells
-  expect_gt(raster::ncell(abund_sub), 1)
-  expect_equal(raster::nlayers(abund_sub), 5)
-  expect_is(abund_sub, "RasterBrick")
-
-  ### variations
-  # without temporal info
-  nt <- ebirdst_extent(c(xmin = -86, xmax = -83, ymin = 42, ymax = 45))
-  expect_warning({abund_sub <- ebirdst_subset(abunds, nt)})
-
-  expect_gt(raster::ncell(abund_sub), 1)
-  expect_equal(raster::nlayers(abund_sub), 52)
-  expect_is(abund_sub, "RasterBrick")
-
-  # extent with polygon
-  poly_extent <- ebirdst_extent(sf::st_as_sfc(lp_extent$extent),
-                                t = c(0.5, 0.6))
-  abund_sub <- ebirdst_subset(abunds, poly_extent)
-  expect_gt(raster::ncell(abund_sub), 1)
-  expect_equal(raster::nlayers(abund_sub), 5)
-
-  expect_is(abund_sub, "RasterBrick")
-  ### error tests
-  expect_error(suppressWarnings(load_raster("abundance", "/bad/path")))
-  # broken path
-
-  # reversed min max
-  expect_error(ebirdst_extent(c(xmin = -83, xmax = -86, ymin = 42, ymax = 45)))
-  expect_error(ebirdst_extent(c(xmin = -86, xmax = -83, ymin = 47, ymax = 45)))
-
-  # missing a corner
-  expect_error(ebirdst_extent(c(xmin = -86, xmax = -83, ymin = 47)))
-})
-
-context("label_raster_stack and parse_raster_dates")
-
-test_that("ebirdst label_raster_stack", {
+test_that("get_species_path", {
   skip_on_cran()
-  abunds <- suppressWarnings(load_raster("abundance", sp_path))
-
-  # expected
-  expect_equal(length(grep("X2018.", names(abunds)[1])), 1)
-
-  # error
-  expect_error(label_raster_stack(abunds[[1:3]]))
-  expect_error(label_raster_stack(abunds[[1]]))
-
-  # expected
-  date_vector <- parse_raster_dates(abunds)
-  expect_is(date_vector, "Date")
+  p <- get_species_path("example_data")
+  expect_true(dir.exists(p))
+  expect_error(get_species_path("not-a-real-species"))
 })
 
-context("load_pis")
+test_that("load_config", {
+  l <- load_config(path)
+  expect_is(l, "list")
+  expect_true(all(c("bins", "bins_seasonal", "SRD_PRED_YEAR") %in% names(l)))
+  expect_error(load_config("/invalid/path/"))
+})
 
-test_that("ebirdst load_pis", {
-  expect_is(load_pis(sp_path), "data.frame")
-  expect_gt(nrow(load_pis(sp_path)), 0)
 
-  # broken path
-  expect_error(load_pis("~/some/messed/up/path/that/does/not/exist"))
+test_that("load_fac_map_parameters", {
+  l <- load_fac_map_parameters(path)
+  expect_is(l, "list")
+  expect_named(l, c("custom_projection", "fa_extent", "res",
+                    "fa_extent_sinu", "abundance_bins"))
+
+  # check components
+  # projection
+  expect_is(raster::projection(l$custom_projection), "character")
+  # extent
+  expect_is(l$fa_extent, "Extent")
+  # resolution
+  expect_is(l$res, "numeric")
+  # sinusoidal extent
+  expect_is(l$fa_extent_sinu, "Extent")
+  # bins
+  expect_is(l$abundance_bins, "numeric")
+
+  expect_error(load_config("/invalid/path/"))
 })

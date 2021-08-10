@@ -2,27 +2,31 @@
 % Please edit documentation in R/ebirdst-loading.R
 \name{load_config}
 \alias{load_config}
-\title{Config file loader}
+\title{Load eBird Status and Trends configuration file}
 \usage{
 load_config(path)
 }
 \arguments{
-\item{path}{character; full path to the directory containing single species
-eBird Status and Trends products.}
+\item{path}{character; directory that the Status and Trends data for a given
+species was downloaded to. This path is returned by \code{ebirdst_download()}
+or \code{get_species_path()}.}
 }
 \value{
-environment object containing all run parameters.
+A list with the run configuration parameters.
 }
 \description{
-Internal function used by load_summary(), load_pis(), and load_pds() to get
-configuration variables from STEM species run information
-(from *_config.RData).
+Load the configuration file for an eBird Status and Trends runs. This
+configuration file is mostly for internal use and contains a variety of
+parameters used in the modeling process.
 }
 \examples{
-\dontrun{
+\donttest{
 # download example data
-sp_path <- ebirdst_download("example_data", tifs_only = FALSE)
-ebirdst:::load_config(sp_path)
+path <- ebirdst_download("example_data")
+# or get the path if you already have the data downloaded
+path <- get_species_path("example_data")
+
+# load configuration file
+cfg <- load_config(path)
 }
 }
-\keyword{internal}

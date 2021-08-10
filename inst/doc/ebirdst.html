@@ -12,23 +12,11 @@
 
 <meta name="author" content="Tom Auer, Daniel Fink" />
 
-<meta name="date" content="2021-01-15" />
+<meta name="date" content="2021-08-10" />
 
 <title>Background, Data Access, and Data Structure</title>
 
-<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
-// be compatible with the behavior of Pandoc < 2.8).
-document.addEventListener('DOMContentLoaded', function(e) {
-  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
-  var i, h, a;
-  for (i = 0; i < hs.length; i++) {
-    h = hs[i];
-    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
-    a = h.attributes;
-    while (a.length > 0) h.removeAttribute(a[0].name);
-  }
-});
-</script>
+<script src="data:application/javascript;base64,Ly8gUGFuZG9jIDIuOSBhZGRzIGF0dHJpYnV0ZXMgb24gYm90aCBoZWFkZXIgYW5kIGRpdi4gV2UgcmVtb3ZlIHRoZSBmb3JtZXIgKHRvCi8vIGJlIGNvbXBhdGlibGUgd2l0aCB0aGUgYmVoYXZpb3Igb2YgUGFuZG9jIDwgMi44KS4KZG9jdW1lbnQuYWRkRXZlbnRMaXN0ZW5lcignRE9NQ29udGVudExvYWRlZCcsIGZ1bmN0aW9uKGUpIHsKICB2YXIgaHMgPSBkb2N1bWVudC5xdWVyeVNlbGVjdG9yQWxsKCJkaXYuc2VjdGlvbltjbGFzcyo9J2xldmVsJ10gPiA6Zmlyc3QtY2hpbGQiKTsKICB2YXIgaSwgaCwgYTsKICBmb3IgKGkgPSAwOyBpIDwgaHMubGVuZ3RoOyBpKyspIHsKICAgIGggPSBoc1tpXTsKICAgIGlmICghL15oWzEtNl0kL2kudGVzdChoLnRhZ05hbWUpKSBjb250aW51ZTsgIC8vIGl0IHNob3VsZCBiZSBhIGhlYWRlciBoMS1oNgogICAgYSA9IGguYXR0cmlidXRlczsKICAgIHdoaWxlIChhLmxlbmd0aCA+IDApIGgucmVtb3ZlQXR0cmlidXRlKGFbMF0ubmFtZSk7CiAgfQp9KTsK"></script>
 
 <style type="text/css">
   code{white-space: pre-wrap;}
@@ -40,11 +28,19 @@ document.addEventListener('DOMContentLoaded', function(e) {
     </style>
 
 
-<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
 <style type="text/css" data-origin="pandoc">
 pre > code.sourceCode { white-space: pre; position: relative; }
 pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
 div.sourceCode { margin: 1em 0; }
 pre.sourceCode { margin: 0; }
@@ -131,187 +127,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 
 
-<style type="text/css">body {
-background-color: #fff;
-margin: 1em auto;
-max-width: 700px;
-overflow: visible;
-padding-left: 2em;
-padding-right: 2em;
-font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
-font-size: 14px;
-line-height: 1.35;
-}
-#TOC {
-clear: both;
-margin: 0 0 10px 10px;
-padding: 4px;
-width: 400px;
-border: 1px solid #CCCCCC;
-border-radius: 5px;
-background-color: #f6f6f6;
-font-size: 13px;
-line-height: 1.3;
-}
-#TOC .toctitle {
-font-weight: bold;
-font-size: 15px;
-margin-left: 5px;
-}
-#TOC ul {
-padding-left: 40px;
-margin-left: -1.5em;
-margin-top: 5px;
-margin-bottom: 5px;
-}
-#TOC ul ul {
-margin-left: -2em;
-}
-#TOC li {
-line-height: 16px;
-}
-table {
-margin: 1em auto;
-border-width: 1px;
-border-color: #DDDDDD;
-border-style: outset;
-border-collapse: collapse;
-}
-table th {
-border-width: 2px;
-padding: 5px;
-border-style: inset;
-}
-table td {
-border-width: 1px;
-border-style: inset;
-line-height: 18px;
-padding: 5px 5px;
-}
-table, table th, table td {
-border-left-style: none;
-border-right-style: none;
-}
-table thead, table tr.even {
-background-color: #f7f7f7;
-}
-p {
-margin: 0.5em 0;
-}
-blockquote {
-background-color: #f6f6f6;
-padding: 0.25em 0.75em;
-}
-hr {
-border-style: solid;
-border: none;
-border-top: 1px solid #777;
-margin: 28px 0;
-}
-dl {
-margin-left: 0;
-}
-dl dd {
-margin-bottom: 13px;
-margin-left: 13px;
-}
-dl dt {
-font-weight: bold;
-}
-ul {
-margin-top: 0;
-}
-ul li {
-list-style: circle outside;
-}
-ul ul {
-margin-bottom: 0;
-}
-pre, code {
-background-color: #f7f7f7;
-border-radius: 3px;
-color: #333;
-white-space: pre-wrap; 
-}
-pre {
-border-radius: 3px;
-margin: 5px 0px 10px 0px;
-padding: 10px;
-}
-pre:not([class]) {
-background-color: #f7f7f7;
-}
-code {
-font-family: Consolas, Monaco, 'Courier New', monospace;
-font-size: 85%;
-}
-p > code, li > code {
-padding: 2px 0px;
-}
-div.figure {
-text-align: center;
-}
-img {
-background-color: #FFFFFF;
-padding: 2px;
-border: 1px solid #DDDDDD;
-border-radius: 3px;
-border: 1px solid #CCCCCC;
-margin: 0 5px;
-}
-h1 {
-margin-top: 0;
-font-size: 35px;
-line-height: 40px;
-}
-h2 {
-border-bottom: 4px solid #f7f7f7;
-padding-top: 10px;
-padding-bottom: 2px;
-font-size: 145%;
-}
-h3 {
-border-bottom: 2px solid #f7f7f7;
-padding-top: 10px;
-font-size: 120%;
-}
-h4 {
-border-bottom: 1px solid #f7f7f7;
-margin-left: 8px;
-font-size: 105%;
-}
-h5, h6 {
-border-bottom: 1px solid #ccc;
-font-size: 105%;
-}
-a {
-color: #0033dd;
-text-decoration: none;
-}
-a:hover {
-color: #6666ff; }
-a:visited {
-color: #800080; }
-a:visited:hover {
-color: #BB00BB; }
-a[href^="http:"] {
-text-decoration: underline; }
-a[href^="https:"] {
-text-decoration: underline; }
-
-code > span.kw { color: #555; font-weight: bold; } 
-code > span.dt { color: #902000; } 
-code > span.dv { color: #40a070; } 
-code > span.bn { color: #d14; } 
-code > span.fl { color: #d14; } 
-code > span.ch { color: #d14; } 
-code > span.st { color: #d14; } 
-code > span.co { color: #888888; font-style: italic; } 
-code > span.ot { color: #007020; } 
-code > span.al { color: #ff0000; font-weight: bold; } 
-code > span.fu { color: #900; font-weight: bold; } 
-code > span.er { color: #a61717; background-color: #e3d2d2; } 
-</style>
+<link rel="stylesheet" href="data:text/css,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" type="text/css" />
 
 
 
@@ -325,13 +141,13 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">Background, Data Access, and Data Structure</h1>
 <h4 class="author">Tom Auer, Daniel Fink</h4>
-<h4 class="date">2021-01-15</h4>
+<h4 class="date">2021-08-10</h4>
 
 
 
 <style type="text/css">
 .table {
-    width: 50%;
+    width: 75%;
 }
 </style>
 <div id="outline" class="section level1">
@@ -347,11 +163,14 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <div id="background" class="section level1">
 <h1>Background</h1>
 <p>The study and conservation of the natural world relies on detailed information about species’ distributions, abundances, environmental associations, and population trends over time. For many taxa, this information is challenging to obtain at relevant geographic scales. The goal of the eBird Status and Trends project is to use data from <a href="https://ebird.org/home">eBird</a>, the global citizen science bird monitoring administered by Cornell Lab of Ornithology, to generate a reliable, standardized source of biodiversity information for the world’s bird populations. To translate the eBird observations into robust data products, we use statistical models to fill spatiotemporal gaps, using local land cover descriptions derived from NASA MODIS and other remote sensing data, while controlling for biases inherent in species observations collected by volunteers.</p>
-<p>This data set provides estimates of the year-round distribution, abundances, and environmental associations for a the majority of North American bird species in 2018. For each species, distribution and abundance estimates are available for all 52 weeks of the year across a regular grid of locations that cover terrestrial North and South America at a resolution of 2.96 km x 2.96 km. Variation in detectability associated with the search effort is controlled by standardizing the estimates as the expected occupancy rate and count of the species on a search conducted for one hour while traveling 1 km at the optimal time of day for detection of that species, on the given day at the given location by a skilled eBirder. To describe how each species is associated with features of its local environment, estimates of the relative importance each remote sensed variable (e.g. land cover, elevation, etc), are available throughout the year at a monthly temporal and regional spatial resolution. Additionally, to assess estimate quality, we provide upper and lower confidence bounds for all abundance estimates and we provide regional-seasonal scale validation metrics for the underlying statistical models. For more information about the data products see the <a href="https://ebird.org/science/status-and-trends">FAQ and summaries</a>. See Fink et al. (2019) for more information about the analysis used to generate these data.</p>
+<p>This data set provides estimates of the year-round distribution, abundances, and environmental associations for a the majority of North American bird species for the year 2019 For each species, distribution and abundance estimates are available for all 52 weeks of the year across a regular grid of locations that cover terrestrial North and South America at a resolution of 2.96 km x 2.96 km. Variation in detectability associated with the search effort is controlled by standardizing the estimates as the expected occupancy rate and count of the species at the optimal time of day, while expending the effort necessary to maximize detection of the species. Predictions have been optimized for search effort and user skill, specific for the given region, season, and species, in order to maximize detection rates.</p>
+<p>To describe how each species is associated with features of its local environment, estimates of the relative importance of each remotely sensed variable (e.g. land cover, elevation, etc), are available throughout the year at a monthly temporal and regional spatial resolution. Additionally, to assess estimate quality, we provide upper and lower confidence bounds for all abundance estimates and we provide regional-seasonal scale validation metrics for the underlying statistical models. For more information about the data products see the <a href="https://ebird.org/science/status-and-trends/faq">FAQ and summaries</a>. See Fink et al. (2019) for more information about the analysis used to generate these data.</p>
 </div>
 <div id="data-access" class="section level1">
 <h1>Data Access</h1>
-<p>eBird Status and Trends data are stored in the cloud on <a href="https://registry.opendata.aws/ebirdst/">Amazon Web Services</a> and accessible for download using the function <code>ebirdst_download()</code>.</p>
+<p>As of July 2021, data access is now granted through a Access Request Form at: <a href="https://ebird.org/st/request" class="uri">https://ebird.org/st/request</a>. Access with this form generates a key to be used with this R package and is provided immediately (as long as commercial use is not requested). Our terms of use have been updated to be more permissive in many cases, particularly academic and research use. When requesting data access, please be sure to carefully read the terms of use and ensure that your intended use is not restricted. Data are no longer publicly available via AWS, aside from an example dataset.</p>
+<p>After completing the Access Request Form, you will be provided a Status and Trends access key, which you will need when downloading data. To store the key so the package can access it when downloading data, use the function <code>set_ebirdst_access_key(&quot;XXXXX&quot;)</code>, where <code>&quot;XXXXX&quot;</code> is the access key provided to you.</p>
+<p>Throughout the package vignettes, a simplified example dataset is used consisting of Yellow-bellied Sapsucker in Michigan. This dataset is designed to be small for faster download and is accessible without a key.</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ebirdst)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># download data</span></span>
@@ -360,36 +179,44 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># by default file will be stored in a persistent data directory:</span></span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># rappdirs::user_data_dir(&quot;ebirdst&quot;))</span></span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>sp_path <span class="ot">&lt;-</span> <span class="fu">ebirdst_download</span>(<span class="at">species =</span> <span class="st">&quot;example_data&quot;</span>)</span></code></pre></div>
-<p>Throughout this vignette, a simplified example dataset is used consisting of Yellow-bellied Sapsucker in Michigan. For a full list of the species available for download, look at the data frame <code>ebirst_runs</code>, which is included in this package.</p>
-<div id="access-from-amazon-web-services" class="section level2">
-<h2>Access from Amazon Web Services</h2>
-<p>The eBird Status and Trends data are stored in the cloud using <a href="https://aws.amazon.com/">Amazon Web Services (AWS)</a> object storage service, <a href="https://aws.amazon.com/s3/">S3</a>. AWS also provides access to flexible cloud computing resources in the form of <a href="https://aws.amazon.com/ec2/">EC2</a> instances. Users may want to considering analyzing Status and Trends data using an AWS EC2 instance because data transfer will be extremely fast between S3 and EC2 compared to downloading the data to a local machine. An additional benefit of using EC2 for analyses is access to instances with more powerful computing resources than a desktop or laptop. Working with the Status and Trends data can be extremely memory intensive, due to their high spatial and temporal resolution, so these additional resources can significantly speed up analyses.</p>
-</div>
+<p>For a full list of the species available for download, look at the data frame <code>ebirdst_runs</code>, which is included in this package. Data for all other species requires an API key to access.</p>
 </div>
 <div id="data-types-and-structure" class="section level1">
 <h1>Data Types and Structure</h1>
 <p><strong>IMPORTANT. AFTER DOWNLOADING THE RESULTS, DO NOT CHANGE THE FILE STRUCTURE.</strong> All functionality in this package relies on the structure inherent in the delivered results. Changing the folder and file structure will cause errors with this package. If you use this package to download and analyze the results, you do not ever need to interact with the files directly, outside of R. If you intend to use the data outside of this package, than this warning does not necessarily apply to you.</p>
 <div id="data-types" class="section level2">
 <h2>Data Types</h2>
-<p>The data products included in the downloads contain two types of data: a) raster data containing occurrence and abundance estimates at a 2.96 km resolution for each of 52 week across North America, b) non-raster, tabular, text data containing information about modeled relationships between observations and the ecological covariates, in the form of: predictor importances (PIs) and predictive performance metrics (PPMs). The raster data will be the most commonly used data, as it provides high resolution, spatially-explicit information about the abundance and occurrence of each species. The non-raster data is an advanced, modeling-oriented product that requires more understanding about the modeling process.</p>
+<p>The data products included in the downloads contain two types of data: a) raster data containing occurrence, count, and abundance estimates at a 2.96 km resolution for each of 52 week across North America, b) non-raster, tabular, text data containing information about modeled relationships between observations and the ecological covariates, in the form of: predictor importances (PIs), partial dependence (PD) relationships, and predictive performance metrics (PPMs). The raster data will be the most commonly used data, as it provides high resolution, spatially-explicit information about the abundance, count, and occurrence of each species. The non-raster data is an advanced, modeling-oriented product that requires more understanding about the modeling process.</p>
 </div>
 <div id="data-structure" class="section level2">
 <h2>Data Structure</h2>
-<p>Data are grouped by species, using a unique run name. The structure of the run name is: <code>six_letter_code-ERD2018-EBIRD_SCIENCE-date-uuid</code>. A full list of species and run names can be found in the <code>ebirdst_runs</code> <a href="https://cornelllabofornithology.github.io/ebirdst/reference/ebirdst_runs.html">data frame</a>. If you are not using the R package you can find a CSV equivalent at the root of the AWS s3 bucket at this <a href="https://s3-us-west-2.amazonaws.com/ebirdst-data/ebirdst_run_names.csv">url</a>.</p>
-<p>For each individual species, the data are structured in the following way:</p>
-<p><code>/&lt;run_name&gt;/data/&lt;run_name&gt;_test-data.csv</code> <code>/&lt;run_name&gt;/data/&lt;run_name&gt;_srd_raster_template.tif</code> <code>/&lt;run_name&gt;/results/preds/test_pred_ave.txt</code> <code>/&lt;run_name&gt;/results/stixels/pi.txt</code> <code>/&lt;run_name&gt;/results/stixels/summary.txt</code> <code>/&lt;run_name&gt;/results/tifs/&lt;run_name&gt;_hr_2018_abundance_median.tif</code> <code>/&lt;run_name&gt;/results/tifs/&lt;run_name&gt;_hr_2018_abundance_upper.tif</code> <code>/&lt;run_name&gt;/results/tifs/&lt;run_name&gt;_hr_2018_abundance_lower.tif</code> <code>/&lt;run_name&gt;/results/tifs/&lt;run_name&gt;_hr_2018_count_median.tif</code> <code>/&lt;run_name&gt;/results/tifs/&lt;run_name&gt;_hr_2018_occurrence_median.tif</code></p>
-<p>In addition, seasonal abundance rasters are provided for those seasons that passed the review process. Up to four layers are provided, structured as follows:</p>
-<p><code>/&lt;run_name&gt;/results/tifs/&lt;run_name&gt;_hr_2018_abundance_seasonal_&lt;season&gt;.tif</code></p>
-<p>Where <code>&lt;season&gt;</code> is one of <code>postbreeding_migration</code>, <code>prebreeding_migration</code>, <code>nonbreeding</code>, <code>breeding</code>, or <code>year_round</code>.</p>
+<p>Data are grouped by species, using a unique run name that starts with the standard 6-letter eBird species code. A full list of species and run names can be found in the <code>ebirdst_runs</code> <a href="https://cornelllabofornithology.github.io/ebirdst/reference/ebirdst_runs.html">data frame</a>.</p>
+<p>For each individual species, the data are stored within a sub-folder named with the run name and containing the following files:</p>
+<ul>
+<li><code>weekly_cubes/</code>: a directory containing GeoTIFFs of the occurrence, count, and abundance estimates at three resolutions. See below for more details.</li>
+<li><code>abundance_seasonal/</code>: a directory containing GeoTIFFs of seasonally averaged abundance estimates at three resolutions. Dates defining the boundary of each season are set on a species-specific basis by an expert reviewer familiar with the species. These dates are available in the <code>ebirdst_runs</code> data frame. Only seasons that passed the expert review process are included.</li>
+<li><code>pi-pd.db</code>: an SQLite database containing predictor importance (PI) and partial dependence estimates, accessible with the <code>load_pis()</code> and <code>load_pds()</code> functions, respectively.</li>
+<li><code>predictions.db</code>: model predictions for a test dataset held out of the model fitting. These predictions are used for calculating predictive performance metrics (PPMs) using the <code>ebirdst_ppms()</code> function.</li>
+<li><code>config.rds</code>: run-specific parameters, mostly for internal use, but also containing useful parameters for mapping the abundance data. These parameters can be loaded with <code>load_config()</code>.</li>
+</ul>
 </div>
 <div id="raster-data" class="section level2">
 <h2>Raster Data</h2>
 <p>eBird Status and Trends abundance, count, and occurrence estimates are currently provided in the widely used GeoTIFF raster format. These are easily opened with the <code>raster</code> package in R, as well as with a variety of GIS software tools. Each estimate is stored in a multi-band GeoTIFF file. These “cubes” come with areas of predicted and assumed zeroes, such that any cells that are NA represent areas outside of the area of estimation. All cubes have 52 weeks, even if some weeks are all NA (such as those species that winter entirely outside of the study area). In addition, seasonally averaged abundance layers are provided. The two vignettes that are relevant to the raster data are the <a href="https://cornelllabofornithology.github.io/ebirdst/articles/ebirdst-intro-mapping.html">intro mapping vignette</a> and the <a href="https://cornelllabofornithology.github.io/ebirdst/articles/ebirdst-advanced-mapping.html">advanced mapping vignette</a>.</p>
-<p>The relevant abundance and occurrence estimate GeoTiff files are found under the <code>/&lt;run_name&gt;/results/tifs/</code> directory and contain the following files.</p>
-<p><code>/&lt;run_name&gt;/results/tifs/&lt;run_name&gt;_hr_2018_abundance_median.tif</code> <code>/&lt;run_name&gt;/results/tifs/&lt;run_name&gt;_hr_2018_abundance_upper.tif</code> <code>/&lt;run_name&gt;/results/tifs/&lt;run_name&gt;_hr_2018_abundance_lower.tif</code> <code>/&lt;run_name&gt;/results/tifs/&lt;run_name&gt;_hr_2018_count_median.tif</code> <code>/&lt;run_name&gt;/results/tifs/&lt;run_name&gt;_hr_2018_occurrence_median.tif</code> <code>/&lt;run_name&gt;/results/tifs/&lt;run_name&gt;_hr_2018_abundance_seasonal_&lt;season&gt;.tif</code></p>
+<p>All predictions are made on a standard 2.96 x 2.96 km grid, however, for convenience lower resolution GeoTIFFs are also provided, which are typically much faster to work with. The three resolutions are:</p>
+<ul>
+<li>High resolution (<code>hr</code>): the native 2.96 km resolution data</li>
+<li>Medium resolution (<code>mr</code>): the <code>hr</code> data aggregated by a factor of 3 in each direction resulting in a resolution of 8.89 km</li>
+<li>Low resolution (<code>lr</code>): the <code>hr</code> data aggregated by a factor of 9 in each direction resulting in a resolution of 26.7 km</li>
+</ul>
+<p>The weekly cubes use the following naming convention:</p>
+<p><code>weekly_cubes/&lt;run_name&gt;_&lt;resolution&gt;_2019_&lt;layer&gt;.tif</code></p>
+<p>And the seasonal GeoTIFFs use the following convention:</p>
+<p><code>seasonal_abundance/&lt;run_name&gt;_&lt;resolution&gt;_2019_abundance-seasonal_&lt;season&gt;.tif</code></p>
+<p>Where <code>&lt;season&gt;</code> is one of <code>postbreeding_migration</code>, <code>prebreeding_migration</code>, <code>nonbreeding</code>, <code>breeding</code>, or <code>year_round</code>.</p>
 <div id="projection" class="section level3">
 <h3>Projection</h3>
-<p>The GeoTIFFs use the same Sinusoidal projection as NASA MODIS data. As part of each data package, a template raster (<code>/&lt;run_name&gt;/data/&lt;run_name_srd_raster_template.tif</code>) is provided, that contains the spatial extent and resolution for the full Western Hemisphere. Accessing this raster directly through the package is not necessary, and can be applied elsewhere (e.g., other GIS software). Note that this projection is ideal for analysis, as it is an equal are projection, but is not ideal for mapping. See the <a href="https://cornelllabofornithology.github.io/ebirdst/articles/ebirdst-intro-mapping.html">intro mapping vignette</a> for details on using a more suitable projection for mapping.</p>
+<p>The GeoTIFFs use the same Sinusoidal projection as NASA MODIS data. As part of each data package, a template raster (<code>srd_raster_template.tif</code>) is provided, that contains the spatial extent and resolution for the full Western Hemisphere. Accessing this raster directly through the package is not necessary, and can be applied elsewhere (e.g., other GIS software). Note that this projection is ideal for analysis, as it is an equal are projection, but is not ideal for mapping. See the <a href="https://cornelllabofornithology.github.io/ebirdst/articles/ebirdst-intro-mapping.html">intro mapping vignette</a> for details on using a more suitable projection for mapping.</p>
 </div>
 <div id="raster-layer-descriptions" class="section level3">
 <h3>Raster Layer Descriptions</h3>
@@ -405,27 +232,27 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <tr class="odd">
 <td>occurrence</td>
 <td>median</td>
-<td><code>&lt;run_name&gt;_hr_2018_occurrence_median.tif</code></td>
+<td><code>&lt;run_name&gt;_&lt;resolution&gt;_2019_occurrence_median.tif</code></td>
 </tr>
 <tr class="even">
 <td>count</td>
 <td>median</td>
-<td><code>&lt;run_name&gt;_hr_2018_count_median.tif</code></td>
+<td><code>&lt;run_name&gt;_&lt;resolution&gt;_2019_count_median.tif</code></td>
 </tr>
 <tr class="odd">
 <td>abundance</td>
 <td>median</td>
-<td><code>&lt;run_name&gt;_hr_2018_abundance_median.tif</code></td>
+<td><code>&lt;run_name&gt;_&lt;resolution&gt;_2019_abundance_median.tif</code></td>
 </tr>
 <tr class="even">
 <td>abundance</td>
 <td>10th quantile</td>
-<td><code>&lt;run_name&gt;_hr_2018_abundance_lower.tif</code></td>
+<td><code>&lt;run_name&gt;_&lt;resolution&gt;_2019_abundance_lower.tif</code></td>
 </tr>
 <tr class="odd">
 <td>abundance</td>
 <td>90th quantile</td>
-<td><code>&lt;run_name&gt;_hr_2018_abundance_upper.tif</code></td>
+<td><code>&lt;run_name&gt;_&lt;resolution&gt;_2019_abundance_upper.tif</code></td>
 </tr>
 </tbody>
 </table>
@@ -465,21 +292,20 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <p>The <code>raster</code> package has a lot of functionality and the <code>RasterLayer</code> format is useful for spatial analysis and mapping, but some users do not have GIS experience or want the data in a simpler format for their preferred method of analysis. There are multiple ways to get more basic representations of the data.</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(raster)</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># load trimmed mean abundances</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>abunds <span class="ot">&lt;-</span> <span class="fu">load_raster</span>(<span class="st">&quot;abundance&quot;</span>, <span class="at">path =</span> sp_path)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># load median abundances</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>abd <span class="ot">&lt;-</span> <span class="fu">load_raster</span>(<span class="st">&quot;abundance&quot;</span>, <span class="at">path =</span> sp_path)</span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co"># use parse_raster_dates() to get actual date objects for each layer</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>date_vector <span class="ot">&lt;-</span> <span class="fu">parse_raster_dates</span>(abunds)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>date_vector <span class="ot">&lt;-</span> <span class="fu">parse_raster_dates</span>(abd)</span>
 <span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co"># to convert the data to a simpler geographic format and access tabularly   </span></span>
 <span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co"># reproject into geographic (decimal degrees) </span></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>abund_stack_ll <span class="ot">&lt;-</span> <span class="fu">projectRaster</span>(abunds[[<span class="dv">26</span>]], <span class="at">crs =</span> <span class="st">&quot;+init=epsg:4326&quot;</span>, </span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>                                <span class="at">method =</span> <span class="st">&quot;ngb&quot;</span>)</span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert raster object into a matrix</span></span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>p <span class="ot">&lt;-</span> <span class="fu">rasterToPoints</span>(abund_stack_ll)</span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(p) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;longitude&quot;</span>, <span class="st">&quot;latitude&quot;</span>, <span class="st">&quot;abundance_umean&quot;</span>)</span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(p)</span></code></pre></div>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>abd_ll <span class="ot">&lt;-</span> <span class="fu">projectRaster</span>(abd[[<span class="dv">26</span>]], <span class="at">crs =</span> <span class="st">&quot;+init=epsg:4326&quot;</span>, <span class="at">method =</span> <span class="st">&quot;ngb&quot;</span>)</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert raster object into a matrix</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>p <span class="ot">&lt;-</span> <span class="fu">rasterToPoints</span>(abd_ll)</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(p) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;longitude&quot;</span>, <span class="st">&quot;latitude&quot;</span>, <span class="st">&quot;abundance_umean&quot;</span>)</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(p)</span></code></pre></div>
 <p>These results can then be written to CSV.</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(p, <span class="at">file =</span> <span class="st">&quot;yebsap_week26.csv&quot;</span>, <span class="at">row.names =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
 <div id="references" class="section level2">

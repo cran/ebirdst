@@ -8,7 +8,8 @@ ebirdst_download(
   species,
   path = rappdirs::user_data_dir("ebirdst"),
   tifs_only = TRUE,
-  force = FALSE
+  force = FALSE,
+  show_progress = TRUE
 )
 }
 \arguments{
@@ -30,22 +31,30 @@ predictive performance metrics.}
 
 \item{force}{logical; if the data have already been downloaded, should a
 fresh copy be downloaded anyway.}
+
+\item{show_progress}{logical; whether to print download progress information.}
 }
 \value{
-Path to the run-specific root of the downloaded files.
+Path to the folder containing the downloaded data package for the
+given species.
 }
 \description{
 Download an eBird Status and Trends data package for a single species, or for
-an example species, to a specified path. The example data consist of the
-results for Yellow-bellied Sapsucker subset to Michigan and are much smaller
-than the full dataset making these data quicker to download and process.
+an example species, to a specified path. Accessing Status and Trends data
+requires an access key, consult \code{\link[=set_ebirdst_access_key]{set_ebirdst_access_key()}} for instructions
+on how to obtain and store this key. The example data consist of the results
+for Yellow-bellied Sapsucker subset to Michigan and are much smaller than the
+full dataset, making these data quicker to download and process. In addition,
+the example data are accessible without an access key.
 }
 \examples{
 \dontrun{
 # download the example data
 ebirdst_download("example_data")
 
-# download the full data package for wood thrush
+# download the data package for wood thrush, geotiffs only
 ebirdst_download("woothr")
+# download the data package for wood thrush, all data
+ebirdst_download("woothr", tifs_only = FALSE)
 }
 }

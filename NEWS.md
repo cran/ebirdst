@@ -1,7 +1,13 @@
+# ebirdst 0.3.0
+
+- add support for new data structures used for 2020 eBird Status and Trends
+- functionality to handle partial dependence data added
+- overhaul of package API to be more intuitive and streamlined
+- all documentation and vignettes updated
+
 # ebirdst 0.2.2
 
 - add support for variable ensemble support in `compute_ppms()`
-- wrap all examples in dontrun to avoid writing files when compiling package
 
 # ebirdst 0.2.1
 

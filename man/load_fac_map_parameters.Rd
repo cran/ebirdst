@@ -7,8 +7,9 @@
 load_fac_map_parameters(path)
 }
 \arguments{
-\item{path}{character; full path to the directory containing single species
-eBird Status and Trends products.}
+\item{path}{character; directory that the Status and Trends data for a given
+species was downloaded to. This path is returned by \code{ebirdst_download()}
+or \code{get_species_path()}.}
 }
 \value{
 A list containing elements:
@@ -17,6 +18,8 @@ A list containing elements:
 full annual cycle
 \item \code{fa_extent}: an \code{Extent} object storing the spatial extent of non-zero
 data for the given species in the custom projection
+\item \code{res}: a numeric vector with 2 elements giving the target resolution of
+raster in the custom projection.
 \item \code{fa_extent_sinu}: the extent in sinusoidal projection
 \item \code{abundance_bins}: abundance bins for the full annual cycle
 }
@@ -29,10 +32,13 @@ extent of non-zero data across the full annual cycle and the projection is
 optimized for this extent.
 }
 \examples{
-\dontrun{
+\donttest{
 # download example data
-sp_path <- ebirdst_download("example_data", tifs_only = FALSE)
+path <- ebirdst_download("example_data", tifs_only = FALSE)
+# or get the path if you already have the data downloaded
+path <- get_species_path("example_data")
+
 # get map parameters
-load_fac_map_parameters(sp_path)
+load_fac_map_parameters(path)
 }
 }

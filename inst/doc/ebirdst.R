@@ -3,7 +3,7 @@ knitr::opts_chunk$set(warning = FALSE,
                       message = FALSE,
                       collapse = TRUE,
                       comment = "#>",
-                      out.width = "\\textwidth", 
+                      out.width = "100%",
                       fig.height = 4, 
                       fig.width = 7, 
                       fig.align = "center")
@@ -23,19 +23,18 @@ knitr::opts_chunk$set(eval = nzchar(Sys.getenv("BUILD_VIGNETTES")))
 ## ----conversion---------------------------------------------------------------
 #  library(raster)
 #  
-#  # load trimmed mean abundances
-#  abunds <- load_raster("abundance", path = sp_path)
+#  # load median abundances
+#  abd <- load_raster("abundance", path = sp_path)
 #  
 #  # use parse_raster_dates() to get actual date objects for each layer
-#  date_vector <- parse_raster_dates(abunds)
+#  date_vector <- parse_raster_dates(abd)
 #  
 #  # to convert the data to a simpler geographic format and access tabularly	
 #  # reproject into geographic (decimal degrees)
-#  abund_stack_ll <- projectRaster(abunds[[26]], crs = "+init=epsg:4326",
-#                                  method = "ngb")
+#  abd_ll <- projectRaster(abd[[26]], crs = "+init=epsg:4326", method = "ngb")
 #  
 #  # Convert raster object into a matrix
-#  p <- rasterToPoints(abund_stack_ll)
+#  p <- rasterToPoints(abd_ll)
 #  colnames(p) <- c("longitude", "latitude", "abundance_umean")
 #  head(p)
 

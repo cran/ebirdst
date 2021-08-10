@@ -3,27 +3,30 @@
 #' Spatiotemporally subset the raster or tabular eBird Status and Trends data.
 #' The spatiotemporal extent should be defined using [ebirdst_extent()].
 #'
-#' @param x eBird Status and Trends data to subset; either a Raster object with
-#'   52 layers (one for each week) or a `data.frame` with PI or PD data.
-#' @param ext [ebirdst_extent] object; the spatiotemporal extent to
-#'   filter the data to.
+#' @param x eBird Status and Trends data to subset; either a `RasterStack`
+#'   object with 52 layers (one for each week) or a data frame with PI or PD
+#'   data.
+#' @param ext [ebirdst_extent] object; the spatiotemporal extent to filter the
+#'   data to.
 #'
-#' @return eBird Status and Trends data in the same format as the input data.
+#' @return eBird Status and Trends data in the same format as the input data,
+#'   but subset in space and time.
 #' @export
 #'
-#' @examples \dontrun{
+#' @examples
+#' \donttest{
+#' # download example data
+#' path <- ebirdst_download("example_data")
+#' # or get the path if you already have the data downloaded
+#' path <- get_species_path("example_data")
+#'
 #' # bbox for southern michigan in may
 #' bb_vec <- c(xmin = -86, xmax = -83, ymin = 41.5, ymax = 43.5)
 #' e <- ebirdst_extent(bb_vec, t = c("05-01", "05-31"))
 #'
-#' # download and load example data
-#' sp_path <- ebirdst_download("example_data")
-#' pis <- load_pis(sp_path)
-#' abd <- load_raster(product = "abundance", sp_path)
-#'
-#' # subset
+#' # load and subset raster data
+#' abd <- load_raster(path, product = "abundance")
 #' abd_ss <- ebirdst_subset(abd, ext = e)
-#' pis_ss <- ebirdst_subset(pis, ext = e)
 #' }
 ebirdst_subset <- function(x, ext) {
   UseMethod("ebirdst_subset")
@@ -33,8 +36,12 @@ ebirdst_subset <- function(x, ext) {
 #' @describeIn ebirdst_subset PI or PD data
 ebirdst_subset.data.frame <- function(x, ext) {
   stopifnot(all(c("date", "lon", "lat") %in% names(x)))
-  stopifnot(all(x$date >= 0), all(x$date <= 1))
+  stopifnot(is.numeric(x$date), all(x$date >= 0), all(x$date <= 1))
   stopifnot(inherits(ext, "ebirdst_extent"))
+
+  if (nrow(x) == 0) {
+    return(x)
+  }
 
   # temporal filtering
   if (!identical(ext$t, c(0, 1))) {
@@ -43,8 +50,6 @@ ebirdst_subset.data.frame <- function(x, ext) {
     } else {
       x <- x[x$date > ext$t[1] | x$date <= ext$t[2], ]
     }
-  } else {
-    warning("Temporal extent missing or incomplete. This may be intentional.")
   }
 
   # spatial filtering
@@ -83,8 +88,6 @@ ebirdst_subset.sf <- function(x, ext) {
     } else {
       x <- x[x$date > ext$t[1] | x$date <= ext$t[2], ]
     }
-  } else {
-    warning("Temporal extent missing or incomplete. This may be intentional.")
   }
 
   # spatial filtering
@@ -124,8 +127,6 @@ ebirdst_subset.Raster <- function(x, ext) {
       r_in <- r_dates > ext$t[1] | r_dates <= ext$t[2]
     }
     x <- x[[which(r_in)]]
-  } else {
-    warning("Temporal extent missing or incomplete. This may be intentional.")
   }
 
   # spatial filtering
