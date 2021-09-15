@@ -22,6 +22,7 @@ knitr::opts_chunk$set(eval = nzchar(Sys.getenv("BUILD_VIGNETTES")))
 #  library(ggplot2)
 #  # resolve namespace conflicts
 #  select <- dplyr::select
+#  sf_use_s2(FALSE)
 
 ## ----st-download--------------------------------------------------------------
 #  sp_path <- ebirdst_download(species = "example_data")
@@ -31,49 +32,33 @@ knitr::opts_chunk$set(eval = nzchar(Sys.getenv("BUILD_VIGNETTES")))
 
 ## ----ne-data, results="hide"--------------------------------------------------
 #  proj <- "+proj=eck4 +lon_0=-90 +x_0=0 +y_0=0 +ellps=WGS84"
-#  ne_scale <- 50
+#  
+#  # download natural earth data
+#  temp_gpkg <- tempfile(fileext = ".gpkg")
+#  file.path("https://github.com/CornellLabofOrnithology/ebirdst/raw/",
+#            "master/data-raw/ebirdst_gis-data.gpkg") %>%
+#    download.file(temp_gpkg)
 #  
 #  # land polygon
-#  ne_land <- ne_countries(scale = ne_scale, returnclass = "sf") %>%
-#    filter(continent %in% c("North America", "South America")) %>%
-#    st_set_precision(1e6) %>%
-#    st_make_valid() %>%
-#    st_union() %>%
+#  ne_land <- read_sf(temp_gpkg, layer = "ne_land") %>%
+#    st_transform(crs = proj) %>%
 #    st_geometry()
-#  # function to subset other features to those  within this land area
-#  wh_subset <- function(x) {
-#    in_wh <- as.logical(st_intersects(x, ne_land, sparse = FALSE))
-#    st_transform(x[in_wh], crs = proj)
-#  }
 #  # country lines
-#  ne_country_lines <- ne_download(scale = ne_scale, category = "cultural",
-#                                  type = "admin_0_boundary_lines_land",
-#                                  returnclass = "sf") %>%
-#    st_geometry() %>%
-#    st_make_valid() %>%
-#    wh_subset()
+#  ne_country_lines <- read_sf(temp_gpkg, layer = "ne_country_lines") %>%
+#    st_transform(crs = proj) %>%
+#    st_geometry()
 #  # state lines
-#  ne_state_lines <- ne_download(scale = ne_scale, category = "cultural",
-#                                type = "admin_1_states_provinces_lines",
-#                                returnclass = "sf") %>%
-#    st_geometry() %>%
-#    st_make_valid() %>%
-#    wh_subset()
+#  ne_state_lines <- read_sf(temp_gpkg, layer = "ne_state_lines") %>%
+#    st_transform(crs = proj) %>%
+#    st_geometry()
 #  # rivers
-#  ne_rivers <- ne_download(scale = ne_scale, category = "physical",
-#                           type = "rivers_lake_centerlines",
-#                           returnclass = "sf") %>%
-#    st_geometry() %>%
-#    st_make_valid() %>%
-#    wh_subset()
+#  ne_rivers <- read_sf(temp_gpkg, layer = "ne_rivers") %>%
+#    st_transform(crs = proj) %>%
+#    st_geometry()
 #  # lakes
-#  ne_lakes <- ne_download(scale = ne_scale, category = "physical",
-#                          type = "lakes",
-#                          returnclass = "sf") %>%
-#    st_geometry() %>%
-#    st_make_valid() %>%
-#    wh_subset()
-#  ne_land <- st_transform(ne_land, crs = proj)
+#  ne_lakes <- read_sf(temp_gpkg, layer = "ne_lakes") %>%
+#    st_transform(crs = proj) %>%
+#    st_geometry()
 
 ## ----season-defs--------------------------------------------------------------
 #  # subset to the yellow-bellied sapsucker season definitions
