@@ -36,7 +36,7 @@ knitr::opts_chunk$set(eval = nzchar(Sys.getenv("BUILD_VIGNETTES")))
 #  # download natural earth data
 #  temp_gpkg <- tempfile(fileext = ".gpkg")
 #  file.path("https://github.com/CornellLabofOrnithology/ebirdst/raw/",
-#            "master/data-raw/ebirdst_gis-data.gpkg") %>%
+#            "main/data-raw/ebirdst_gis-data.gpkg") %>%
 #    download.file(temp_gpkg)
 #  
 #  # land polygon
