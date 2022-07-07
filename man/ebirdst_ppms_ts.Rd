@@ -44,8 +44,8 @@ possible metrics varies by PPM type:
 An \code{ebirdst_pppms_ts} object containing a list of three data frames:
 \code{binary_ppms}, \code{occ_ppms}, and \code{abd_ppms}. Each row of these data frames
 corresponds to the PPMs from one Monte Carlo iteration for a given time
-period. Columns correspond to the different PPMS. \code{binary_ppms} contains
-binary or range-based PPMS, \code{occ_ppms} contains within-range occurrence
+period. Columns correspond to the different PPMs. \code{binary_ppms} contains
+binary or range-based PPMs, \code{occ_ppms} contains within-range occurrence
 probability PPMs, and \code{abd_ppms} contains within-range abundance PPMs. In
 some cases, PPMs may be missing, either because there isn't a large enough
 test set within the spatiotemporal extent or because average occurrence or
@@ -67,7 +67,7 @@ path <- ebirdst_download("example_data", tifs_only = FALSE)
 path <- get_species_path("example_data")
 
 # define a spatial extent to calculate ppms over
-e <- ebirdst_extent(c(xmin = -86, xmax = -83, ymin = 42.5, ymax = 44.5))
+e <- ebirdst_extent(c(xmin = -90, xmax = -82, ymin = 41, ymax = 48))
 
 # compute predictive performance metrics, summarized by months
 ppms <- ebirdst_ppms_ts(path = path, ext = e, summarize_by = "months")

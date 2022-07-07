@@ -5,9 +5,9 @@
 \alias{plot.ebirdst_habitat}
 \title{eBird Status and Trends predictive habitat associations}
 \usage{
-ebirdst_habitat(path, ext, pis = NULL, pds = NULL, stixels = NULL)
+ebirdst_habitat(path, ext, data = NULL, stationary_associations = FALSE)
 
-\method{plot}{ebirdst_habitat}(x, n_predictors = 15, date_range = c(0, 1), ...)
+\method{plot}{ebirdst_habitat}(x, n_habitat_types = 15, ...)
 }
 \arguments{
 \item{path}{character; directory that the Status and Trends data for a given
@@ -19,27 +19,31 @@ calculate the habitat associations. Note that \strong{temporal component of \cod
 is ignored is this function}, habitat associations are always calculated
 for the full year.}
 
-\item{pis, pds, stixels}{as an alternative to providing the \code{path} argument
-specifying the location of the data package, the data required to calculate
-habitat associations can be provided explicitly. PI, PD, and stixel data
-frames can provided, which come from the \code{load_pis()}, \code{load_pds()}, and
-\code{load_stixels()} functions, respectively. Ignored if \code{path} is provided.
-\strong{In most cases, users will want to avoid using these arguments and simply
-provide \code{path} instead.}}
+\item{data}{as an alternative to providing the \code{path} argument specifying the
+location of the data package, the data required to calculate habitat
+associations can be provided explicitly as a named list of three data
+frames: \code{pis} containing PI data from \code{\link[=load_pis]{load_pis()}}, \code{pds} containing PD
+data from \code{\link[=load_pds]{load_pds()}}, and \code{stixels} containing stixel weights in a
+\code{weight} column. All data should be provided at the stixel level,
+identified by the \code{stixel_id} column, and only those stixels appearing in
+the \code{stixels} data frame will be used. Typically stixel weights are the
+proportion of the focal region that the given stixel overlaps. Ignored if
+\code{path} is provided. \strong{In most cases, users will want to avoid using these
+arguments and simply provide \code{path} instead.}}
+
+\item{stationary_associations}{logical; when the habitat association should
+be assumed to vary throughout the year and estimates should be made for
+each week of the year (the default) or habitat associations should be
+assumed constant throughout the year and a single set of estimates made for
+the full year. Annual estimates should only be made when you expect the
+associations to be constant throughout the year, e.g. for resident species.}
 
 \item{x}{\link{ebirdst_habitat} object; habitat relationships as calculated by
 \code{\link[=ebirdst_habitat]{ebirdst_habitat()}}.}
 
-\item{n_predictors}{number of predictors to include in the cake plot. The
-most important set of predictors will be chosen based on the maximum weekly
-importance value across the whole year.}
-
-\item{date_range}{the range of dates for plotting; a 2-element vector of the
-start and end dates of the date range, provided either as dates (Date
-objects or strings in ISO format "YYYY-MM-DD") or numbers between 0 and 1
-representing the fraction of the year. When providing dates as a string,
-the year can be omitted (i.e. "MM-DD"). By default the full year of data
-are plotted.}
+\item{n_habitat_types}{number of habitat types to include in the cake plot.
+The most important set of predictors will be chosen based on the maximum
+weekly importance value across the whole year.}
 
 \item{...}{ignored.}
 }
@@ -49,10 +53,11 @@ predictor importance and directionality for each predictor for each week of
 the year. The columns are:
 \itemize{
 \item \code{predictor}: the name of the predictor
-\item \code{date}: the week centroid expressed as a continuous value between 0-1.
-See \link{ebirdst_weeks} to convert these values to ISO dates.
+\item \code{week}: the date of the center of the week, expressed as "MM-DD". This
+column will be missing if \code{stationary_associations = TRUE}.
 \item \code{importance}: the relative importance of the predictor, these values are
 scaled so they sum to 1 within each week.
+\item \code{prob_pos_slope}: the predicted probability that the slope of the PD
 \item \code{direction}: the direction of the relationship, either 1 for a positive
 relationship, -1 for a negative relationship, or NA when the direction of
 the relationship is not significant.
@@ -76,7 +81,7 @@ these are calculated within a 1.5 km radius of each checklist:
 \item Land cover: percent of each landcover class
 \item Water cover: percent of each watercover class
 \item Intertidal: percent cover of intertidal mudflats
-\item Nighttime lights: total refelctance of nighttime lights
+\item Nighttime lights: total reflectance of nighttime lights
 \item Roads: road density. There are 5 covariates distinguishing between
 different road types; however, these are grouped together for the sake of
 the habitat associations.
@@ -95,8 +100,7 @@ path <- ebirdst_download("example_data", tifs_only = FALSE)
 path <- get_species_path("example_data")
 
 # define a spatial extent to calculate ppms over
-bb_vec <- c(xmin = -86, xmax = -83, ymin = 42.5, ymax = 44.5)
-e <- ebirdst_extent(bb_vec)
+e <- ebirdst_extent(c(xmin = -90, xmax = -82, ymin = 41, ymax = 48))
 
 # compute habitat associations
 habitat <- ebirdst_habitat(path = path, ext = e)

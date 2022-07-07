@@ -10,34 +10,55 @@ knitr::opts_chunk$set(warning = FALSE,
 # only build vignettes locally and not for R CMD check
 knitr::opts_chunk$set(eval = nzchar(Sys.getenv("BUILD_VIGNETTES")))
 
-## ----quick_start--------------------------------------------------------------
+## ----access-------------------------------------------------------------------
 #  library(ebirdst)
-#  
-#  # download data
-#  # download a simplified example dataset from aws s3
-#  # example data are for Yellow-bellied Sapsucker in Michigan
-#  # by default file will be stored in a persistent data directory:
-#  # rappdirs::user_data_dir("ebirdst"))
-#  sp_path <- ebirdst_download(species = "example_data")
-
-## ----conversion---------------------------------------------------------------
 #  library(raster)
+#  library(sf)
+#  library(dplyr)
 #  
-#  # load median abundances
-#  abd <- load_raster("abundance", path = sp_path)
-#  
-#  # use parse_raster_dates() to get actual date objects for each layer
-#  date_vector <- parse_raster_dates(abd)
-#  
-#  # to convert the data to a simpler geographic format and access tabularly	
-#  # reproject into geographic (decimal degrees)
-#  abd_ll <- projectRaster(abd[[26]], crs = "+init=epsg:4326", method = "ngb")
-#  
-#  # Convert raster object into a matrix
-#  p <- rasterToPoints(abd_ll)
-#  colnames(p) <- c("longitude", "latitude", "abundance_umean")
-#  head(p)
+#  # download a simplified example dataset for Yellow-bellied Sapsucker in Michigan
+#  path <- ebirdst_download(species = "example_data")
 
-## ----conversion_write, eval = FALSE-------------------------------------------
-#  write.csv(p, file = "yebsap_week26.csv", row.names = FALSE)
+## ----species------------------------------------------------------------------
+#  glimpse(ebirdst_runs)
+
+## ----types_dir----------------------------------------------------------------
+#  # for non-example data use the species code or name instead of "example_data"
+#  path <- get_species_path("example_data")
+
+## ----types_weekly-------------------------------------------------------------
+#  # weekly, low res, median occurrence
+#  occ_lr <- load_raster(path, product = "occurrence", resolution = "lr")
+#  occ_lr
+#  # use parse_raster_dates() to get the date associated which each raster layer
+#  parse_raster_dates(occ_lr)
+#  
+#  # weekly, low res, abundance confidence intervals
+#  abd_lower <- load_raster(path, product = "abundance", metric = "lower",
+#                           resolution = "lr")
+#  abd_upper <- load_raster(path, product = "abundance", metric = "upper",
+#                           resolution = "lr")
+
+## ----types_seasonal-----------------------------------------------------------
+#  # seasonal, low res, mean relative abundance
+#  abd_seasonal_mean <- load_raster(path, product = "abundance",
+#                                   period = "seasonal", metric = "mean",
+#                                   resolution = "lr")
+#  # season that each layer corresponds to
+#  names(abd_seasonal_mean)
+#  # just the breeding season layer
+#  abd_seasonal_mean[["breeding"]]
+#  
+#  # seasonal, low res, max occurrence
+#  occ_seasonal_max <- load_raster(path, product = "occurrence",
+#                                  period = "seasonal", metric = "max",
+#                                  resolution = "lr")
+
+## ----types_ranges-------------------------------------------------------------
+#  # seasonal, low res, smoothed ranges
+#  ranges <- load_ranges(path, resolution = "lr")
+#  ranges
+#  
+#  # subset to just the breeding season range using dplyr
+#  range_breeding <- filter(ranges, season == "breeding")
 

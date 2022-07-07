@@ -18,9 +18,9 @@
 #' @param plot logical; whether to plot predictor importance or just return top
 #'   predictors.
 #'
-#' @return Plots a boxplot of predictor importance and invisibly returns a named
-#'   vector of top predictors, and their median predictor importance, based on
-#'   the `n_top_pred` parameter.
+#' @return Plots a boxplot of predictor importance and invisibly returns the PI
+#' data subset to just the top predictors, grouped and renamed according to
+#' `by_cover_class` and `pretty_names`.
 #'
 #' @export
 #'
@@ -38,12 +38,12 @@
 #' bb_vec <- c(xmin = -86, xmax = -83, ymin = 41.5, ymax = 43.5)
 #' e <- ebirdst_extent(bb_vec, t = c("05-01", "05-31"))
 #'
-#' top_pred <- plot_pis(pis, ext = e, by_cover_class = TRUE, n_top_pred = 10)
+#' top_pred <- plot_pis(pis, ext = e, n_top_pred = 10)
 #' top_pred
 #' }
 plot_pis <- function(pis, ext,
                      by_cover_class = TRUE,
-                     n_top_pred = 20,
+                     n_top_pred = 15,
                      pretty_names = TRUE,
                      plot = TRUE) {
   stopifnot(is.data.frame(pis))
@@ -54,62 +54,64 @@ plot_pis <- function(pis, ext,
   stopifnot(is.logical(pretty_names), length(pretty_names) == 1)
   stopifnot(is.logical(plot), length(plot) == 1)
 
+  # were these occurrence or count pis
+  m <- attr(pis, "model")
+
   # subset
   pis <- ebirdst_subset(pis, ext = ext)
-  pis <- pis[, ebirdst::ebirdst_predictors$predictor_tidy]
 
   # if aggregating by cover class aggregate the fragstats metrics
+  lc <- dplyr::distinct(pis, .data$predictor)
+  lc$predictor_class <- convert_classes(lc$predictor,
+                                        by_cover_class = by_cover_class,
+                                        pretty = pretty_names)
+  pis <- dplyr::inner_join(pis, lc, by = "predictor")
+  pis$predictor <- pis$predictor_class
+  pis$predictor_class <- NULL
   if (isTRUE(by_cover_class)) {
-    # find landcover classes
-    lc <- convert_classes(names(pis), by_cover_class = TRUE,
-                          pretty = pretty_names)
-    lc_groups <- unique(lc)
-    # aggregate over classes
-    m <- matrix(nrow = nrow(pis), ncol = length(lc_groups))
-    colnames(m) <- lc_groups
-    for (i in lc_groups) {
-      if (sum(lc == i) == 1) {
-        m[, i] <- pis[[which(lc == i)]]
-      } else {
-        m[, i] <- apply(pis[, lc == i], 1, FUN = mean, na.rm = TRUE)
-      }
-    }
-    pis <- as.data.frame(m, stringsAsFactors = FALSE)
-  } else {
-    names(pis) <- convert_classes(names(pis), by_cover_class = FALSE,
-                                  pretty = pretty_names)
+    pis <- dplyr::group_by(pis, .data$stixel_id, .data$predictor)
+    pis <- dplyr::summarise(pis,
+                            importance = mean(.data$importance, na.rm = TRUE),
+                            .groups = "drop")
   }
 
   # compute median predictor importance across stixels
-  pi_median <- apply(pis, 2, stats::median, na.rm = TRUE)
-  pi_median <- sort(pi_median, decreasing = TRUE)
+  pi_median <- dplyr::group_by(pis, .data$predictor)
+  pi_median <- dplyr::summarise(pi_median,
+                                importance = stats::median(.data$importance,
+                                                           na.rm = TRUE),
+                                .groups = "drop")
+  pi_median <- dplyr::arrange(pi_median, dplyr::desc(.data$importance))
 
-  # find the top preds based on function variable n_top_pred
-  top_names <- names(pi_median)[1:min(round(n_top_pred), length(pi_median))]
-  top_names <- stats::na.omit(top_names)
+  # find the top predictors
+  pi_median <- dplyr::arrange(pi_median, dplyr::desc(.data$importance))
+  top_names <- dplyr::top_n(pi_median, n = n_top_pred, wt = .data$importance)
 
   # subset all values based on top_names
-  pis_top <- pis[, top_names]
+  pi_median <- dplyr::filter(pi_median,
+                             .data$predictor %in% top_names$predictor)
+  pis_top <- dplyr::filter(pis, .data$predictor %in% top_names$predictor)
 
-  # gather to long format from wide
-  pis_top <- tidyr::pivot_longer(pis_top, dplyr::everything(),
-                                 names_to = "predictor", values_to = "pi")
-
-  # pis have have spurious large values, NAs and NaNs
+  # pis can have spurious large values, NAs and NaNs
   # so clean up, trim, and check for complete cases
-  pis_top$pi <- as.numeric(pis_top$pi)
-  p98 <- stats::quantile(pis_top$pi, probs = 0.98, na.rm = TRUE)
-  pis_top <- pis_top[pis_top$pi < p98, ]
+  p98 <- stats::quantile(pis_top$importance, probs = 0.98, na.rm = TRUE)
+  pis_top <- pis_top[pis_top$importance < p98, ]
   pis_top <- pis_top[stats::complete.cases(pis_top), ]
   pis_top$predictor <- stats::reorder(pis_top$predictor,
-                                      pis_top$pi,
+                                      pis_top$importance,
                                       FUN = stats::median)
 
   # plot
   if (isTRUE(plot)) {
-    y_lab <- stringr::str_glue("Relative Importance (occurrence model)")
+    if (m == "occurrence") {
+      y_lab <- "Relative Importance (occurrence model)"
+    } else if (m == "count") {
+      y_lab <- "Relative Importance (count model)"
+    } else {
+      y_lab <- "Relative Importance"
+    }
     g <- ggplot2::ggplot(pis_top) +
-      ggplot2::aes_string(x = "predictor", y = "pi") +
+      ggplot2::aes_string(x = "predictor", y = "importance") +
       ggplot2::geom_boxplot() +
       ggplot2::coord_flip() +
       ggplot2::labs(y = y_lab, x = NULL) +
@@ -117,7 +119,7 @@ plot_pis <- function(pis, ext,
     print(g)
   }
 
-  invisible(pi_median[top_names])
+  invisible(pis_top)
 }
 
 
@@ -180,12 +182,12 @@ plot_pis <- function(pis, ext,
 #' pds <- load_pds(path)
 #'
 #' # define a spatiotemporal extent to plot data from
-#' bb_vec <- c(xmin = -86, xmax = -83, ymin = 41.5, ymax = 43.5)
+#' bb_vec <- c(xmin = -90, xmax = -82, ymin = 41, ymax = 48)
 #' e <- ebirdst_extent(bb_vec, t = c("05-01", "05-31"))
 #'
 #' # for testing, run with 5 bootstrap iterations for speed
 #' # in practice, best to run with the default number of iterations (100)
-#' pd_smooth <- plot_pds(pds, "solar_noon_diff", ext = e, n_bs = 5)
+#' pd_smooth <- plot_pds(pds, "solar_noon_diff_mid", ext = e, n_bs = 5)
 #' dplyr::glimpse(pd_smooth)
 #' }
 plot_pds <- function(pds, predictor, ext,
@@ -215,20 +217,24 @@ plot_pds <- function(pds, predictor, ext,
     stopifnot(is.numeric(ylim), length(ylim) == 2, ylim[1] < ylim[2])
   }
 
+  # were these occurrence or count pds
+  m <- attr(pds, "model")
+  if (is.null(m)) {
+    m <- ""
+  }
+
   # match predictor
   p <- ebirdst::ebirdst_predictors
-  predictor <- stringr::str_to_lower(predictor)
-  predictor <- stringr::str_replace_all(predictor, "\\.", "_")
-  if (!predictor %in% p$predictor_tidy) {
+  predictor <- transform_predictor_names(predictor)
+  if (!predictor %in% p$predictor) {
     stop(paste(predictor, "is not a valid predictor variable."))
   }
-  predictor_raw <- match(predictor, p$predictor_tidy)
-  predictor_label <- p$predictor_label[predictor_raw]
-  predictor_raw <- p$predictor_tidy[predictor_raw]
+  predictor_idx <- match(predictor, p$predictor)
+  predictor_label <- p$predictor_label[predictor_idx]
 
   # subset pd
   pds <- ebirdst_subset(pds, ext = ext)
-  pds <- pds[pds$predictor == predictor_raw, ]
+  pds <- pds[pds$predictor == predictor, ]
   pds <- pds[, c("stixel_id", "predictor_value", "response")]
   names(pds) <- c("stixel_id", "x", "y")
 
@@ -366,6 +372,13 @@ plot_pds <- function(pds, predictor, ext,
     }
 
     # main plot
+    if (m == "occurrence") {
+      y_lab <- "Deviation E(Logit Occurrence)"
+    } else if (m == "count") {
+      y_lab <- "Deviation E(Count)"
+    } else {
+      y_lab <- "Response"
+    }
     g <- ggplot2::ggplot(pd_ci) +
       ggplot2::aes_string(x = "x", y = "pd_median") +
       ggplot2::geom_hline(yintercept = 0, lwd = 0.5, col = "#000000") +
@@ -380,8 +393,7 @@ plot_pds <- function(pds, predictor, ext,
       # smoothed line
       ggplot2::geom_line(col = "#fa6900", lwd = 1.5) +
       ggplot2::ylim(ylim) +
-      ggplot2::labs(x = NULL, y = "Deviation E(Logit Occurrence)",
-                    title = predictor_label) +
+      ggplot2::labs(x = NULL, y = y_lab, title = predictor_label) +
       ggplot2::theme_light()
 
     suppressWarnings(print(g))
@@ -390,6 +402,8 @@ plot_pds <- function(pds, predictor, ext,
   invisible(pd_ci)
 }
 
+
+# internal ----
 
 #' Converts cryptic cover class names to readable land cover names
 #'
@@ -406,31 +420,31 @@ plot_pds <- function(pds, predictor, ext,
 #' @keywords internal
 #'
 #' @examples
-#' predictors <- c("MCD12Q1_LCCS1_FS_C1_1500_ED", "MOD44W_OIC_FS_C3_1500_ED",
-#'                 "ELEV_SD")
+#' predictors <- c("MCD12Q1_LCCS1_FS_C1_1500_ED", "astwbd_fs_c1_1500_pland",
+#'                 "elev_250m_sd")
 #' ebirdst:::convert_classes(predictors, pretty = TRUE)
 convert_classes <- function(x, by_cover_class = FALSE, pretty = FALSE) {
   stopifnot(is.character(x))
   stopifnot(is.logical(by_cover_class), length(by_cover_class) == 1)
   stopifnot(is.logical(pretty), length(pretty) == 1)
 
-  x <- stringr::str_replace_all(stringr::str_to_lower(x), "\\.", "_")
+  x <- transform_predictor_names(x)
   predictors_df <- ebirdst::ebirdst_predictors
-  idx <- match(x, predictors_df$predictor_tidy)
+  idx <- match(x, predictors_df$predictor)
 
   if (isTRUE(by_cover_class)) {
     if (isTRUE(pretty)) {
       y <- dplyr::coalesce(predictors_df$lc_class_label[idx], x)
     } else {
       y <- dplyr::coalesce(predictors_df$lc_class[idx],
-                           predictors_df$predictor_tidy[idx],
+                           predictors_df$predictor[idx],
                            x)
     }
   } else {
     if (isTRUE(pretty)) {
       y <- dplyr::coalesce(predictors_df$predictor_label[idx], x)
     } else {
-      y <- dplyr::coalesce(predictors_df$predictor_tidy[idx], x)
+      y <- dplyr::coalesce(predictors_df$predictor[idx], x)
     }
   }
   return(y)

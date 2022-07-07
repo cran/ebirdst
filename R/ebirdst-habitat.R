@@ -11,13 +11,23 @@
 #'   calculate the habitat associations. Note that **temporal component of `ext`
 #'   is ignored is this function**, habitat associations are always calculated
 #'   for the full year.
-#' @param pis,pds,stixels as an alternative to providing the `path` argument
-#'   specifying the location of the data package, the data required to calculate
-#'   habitat associations can be provided explicitly. PI, PD, and stixel data
-#'   frames can provided, which come from the `load_pis()`, `load_pds()`, and
-#'   `load_stixels()` functions, respectively. Ignored if `path` is provided.
-#'   **In most cases, users will want to avoid using these arguments and simply
-#'   provide `path` instead.**
+#' @param data as an alternative to providing the `path` argument specifying the
+#'   location of the data package, the data required to calculate habitat
+#'   associations can be provided explicitly as a named list of three data
+#'   frames: `pis` containing PI data from [load_pis()], `pds` containing PD
+#'   data from [load_pds()], and `stixels` containing stixel weights in a
+#'   `weight` column. All data should be provided at the stixel level,
+#'   identified by the `stixel_id` column, and only those stixels appearing in
+#'   the `stixels` data frame will be used. Typically stixel weights are the
+#'   proportion of the focal region that the given stixel overlaps. Ignored if
+#'   `path` is provided. **In most cases, users will want to avoid using these
+#'   arguments and simply provide `path` instead.**
+#' @param stationary_associations logical; when the habitat association should
+#'   be assumed to vary throughout the year and estimates should be made for
+#'   each week of the year (the default) or habitat associations should be
+#'   assumed constant throughout the year and a single set of estimates made for
+#'   the full year. Annual estimates should only be made when you expect the
+#'   associations to be constant throughout the year, e.g. for resident species.
 #'
 #' @details The Status and Trends models use both effort (e.g. number of
 #'   observers, length of checklist) and habitat (e.g. elevation, percent forest
@@ -29,7 +39,7 @@
 #'    - Land cover: percent of each landcover class
 #'    - Water cover: percent of each watercover class
 #'    - Intertidal: percent cover of intertidal mudflats
-#'    - Nighttime lights: total refelctance of nighttime lights
+#'    - Nighttime lights: total reflectance of nighttime lights
 #'    - Roads: road density. There are 5 covariates distinguishing between
 #'    different road types; however, these are grouped together for the sake of
 #'    the habitat associations.
@@ -43,10 +53,12 @@
 #'   predictor importance and directionality for each predictor for each week of
 #'   the year. The columns are:
 #'   - `predictor`: the name of the predictor
-#'   - `date`: the week centroid expressed as a continuous value between 0-1.
-#'   See [ebirdst_weeks] to convert these values to ISO dates.
+#'   - `week`: the date of the center of the week, expressed as "MM-DD". This
+#'   column will be missing if `stationary_associations = TRUE`.
 #'   - `importance`: the relative importance of the predictor, these values are
 #'   scaled so they sum to 1 within each week.
+#'   - `prob_pos_slope`: the predicted probability that the slope of the PD
+#    relationship for the given predictor is positive.
 #'   - `direction`: the direction of the relationship, either 1 for a positive
 #'   relationship, -1 for a negative relationship, or NA when the direction of
 #'   the relationship is not significant.
@@ -61,8 +73,7 @@
 #' path <- get_species_path("example_data")
 #'
 #' # define a spatial extent to calculate ppms over
-#' bb_vec <- c(xmin = -86, xmax = -83, ymin = 42.5, ymax = 44.5)
-#' e <- ebirdst_extent(bb_vec)
+#' e <- ebirdst_extent(c(xmin = -90, xmax = -82, ymin = 41, ymax = 48))
 #'
 #' # compute habitat associations
 #' habitat <- ebirdst_habitat(path = path, ext = e)
@@ -70,102 +81,107 @@
 #' # produce a cake plot
 #' plot(habitat)
 #' }
-ebirdst_habitat <- function(path, ext, pis = NULL, pds = NULL, stixels = NULL) {
+ebirdst_habitat <- function(path, ext, data = NULL,
+                            stationary_associations = FALSE) {
+  stopifnot(is.logical(stationary_associations),
+            length(stationary_associations) == 1)
   if (missing(path)) {
-    stopifnot(is.data.frame(pis))
-    stopifnot(is.data.frame(pds))
-    stopifnot(is.data.frame(stixels))
+    stopifnot(is.list(data), all(c("pis", "pds", "stixels") %in% names(data)))
+    pis <- data[["pis"]]
+    pds <- data[["pds"]]
+    stixel_coverage <- data[["stixels"]]
+
+    col_names <- c("stixel_id", "day_of_year", "predictor", "importance")
+    stopifnot(is.data.frame(pis), all(col_names %in% names(pis)))
+
+    col_names <- c("stixel_id", "day_of_year", "predictor",
+                   "predictor_value", "response")
+    stopifnot(is.data.frame(pds), all(col_names %in% names(pds)))
+
+    col_names <- c("stixel_id", "weight")
+    stopifnot(is.data.frame(stixel_coverage),
+              all(col_names %in% names(stixel_coverage)))
+    ext <- NULL
+    rm(data)
   } else {
     stopifnot(is.character(path), length(path) == 1, dir.exists(path))
-  }
 
-  if (missing(ext)) {
-    stop("A spatiotemporal extent must be provided.")
-  } else {
-    stopifnot(inherits(ext, "ebirdst_extent"))
-    if (!sf::st_is_longlat(ext$extent)) {
-      stop("Extent must provided in WGS84 lon-lat coordinates.")
+    if (missing(ext)) {
+      stop("A spatiotemporal extent must be provided.")
+    } else {
+      stopifnot(inherits(ext, "ebirdst_extent"))
+      if (!sf::st_is_longlat(ext$extent)) {
+        stop("Extent must provided in WGS84 lon-lat coordinates.")
+      }
     }
+    # remove temporal component of extent
+    ext$t <- c(0, 1)
+    # spatial extent polygon
+    ext_poly <- ext$extent
+    if (ext$type == "bbox") {
+      ext_poly <- sf::st_as_sfc(ext_poly)
+    }
+    ext_poly <- sf::st_transform(ext_poly, crs = 4326)
+
+    # generate stixel polygons
+    if (!missing(path)) {
+      stixels <- load_stixels(path = path, ext = ext)
+    } else {
+      stixels <- ebirdst_subset(stixels, ext = ext)
+    }
+
+    if (nrow(stixels) == 0) {
+      warning("No stixels within the provided extent.")
+      return(NULL)
+    }
+
+    # convert stixels to polygons
+    stixels <- stixelize(stixels)
+    stixels$area <- sf::st_area(stixels)
+    stixels <- dplyr::select(stixels, .data$stixel_id, .data$area)
+
+    # calculate % of stixel within focal extent
+    stixels <- suppressWarnings(suppressMessages(
+      sf::st_make_valid(sf::st_intersection(stixels, ext_poly))
+    ))
+    stixels$area_in_extent <- sf::st_area(stixels)
+    stixels$weight <- as.numeric(stixels$area_in_extent / stixels$area)
+    stixel_coverage <- sf::st_drop_geometry(stixels)
+    stixel_coverage <- dplyr::select(stixel_coverage,
+                                     .data$stixel_id,
+                                     .data$weight)
+    rm(stixels)
+
+    # load pis and pds, occurrence only
+    pis <- load_pis(path = path, ext = ext, model = "occurrence")
+    pds <- load_pds(path = path, ext = ext, model = "occurrence")
   }
-  # remove temporal component of extent
-  ext$t <- c(0, 1)
-  # spatial extent polygon
-  ext_poly <- ext$extent
-  if (ext$type == "bbox") {
-    ext_poly <- sf::st_as_sfc(ext_poly)
-  }
-  ext_poly <- sf::st_transform(ext_poly, crs = 4326)
 
-  # generate stixel polygons
-  if (!missing(path)) {
-    stixels <- load_stixels(path = path, ext = ext)
-  } else {
-    stixels <- ebirdst_subset(stixels, ext = ext)
-  }
+  # drop stixels not in region
+  pis <- dplyr::semi_join(pis, stixel_coverage, by = "stixel_id")
+  pds <- dplyr::semi_join(pds, stixel_coverage, by = "stixel_id")
 
-  if (nrow(stixels) == 0) {
-    warning("No stixels within the provided extent.")
-    return(NULL)
-  }
-
-  # convert stixels to polygons
-  stixels <- stixelize(stixels)
-  stixels$area <- sf::st_area(stixels)
-  stixels <- dplyr::select(stixels, .data$stixel_id, .data$area)
-
-  # calculate % of stixel within focal extent
-  stixels <- suppressWarnings(suppressMessages(
-    sf::st_intersection(stixels, ext_poly)
-  ))
-  stixels$area_in_extent <- sf::st_area(stixels)
-  stixels$coverage <- as.numeric(stixels$area_in_extent / stixels$area)
-  stixel_coverage <- sf::st_drop_geometry(stixels)
-  stixel_coverage <- dplyr::select(stixel_coverage,
-                                   .data$stixel_id,
-                                   .data$coverage)
-  rm(stixels)
-
-  # drop any stixels that cover less than 10% of the focal extent
-  stixel_coverage <- stixel_coverage[stixel_coverage$coverage >= 0.10, ]
-
-  # load pis and pds, occurrence only
-  if (!missing(path)) {
-    pis <- load_pis(path = path, ext = ext)
-    pds <- load_pds(path = path, ext = ext)
-  } else {
-    pis <- ebirdst_subset(pis, ext = ext)
-    pds <- ebirdst_subset(pds, ext = ext)
-  }
   # remove intertidal if it's missing for any stixels
-  if (any(is.na(pis[["intertidal_fs_c1_1500_pland"]]))) {
-    pis[["intertidal_fs_c1_1500_pland"]] <- NULL
+  it <- pis[pis$predictor == "intertidal_fs_c1_1500_pland", ]$importance
+  if (any(is.na(it))) {
+    pis <- pis[pis$predictor != "intertidal_fs_c1_1500_pland", ]
     pds <- pds[pds$predictor != "intertidal_fs_c1_1500_pland", ]
   }
-  if (any(is.na(pis[["intertidal_fs_c1_1500_ed"]]))) {
-    pis[["intertidal_fs_c1_1500_ed"]] <- NULL
+  it <- pis[pis$predictor == "intertidal_fs_c1_1500_ed", ]$importance
+  if (any(is.na(it))) {
+    pis <- pis[pis$predictor != "intertidal_fs_c1_1500_ed", ]
     pds <- pds[pds$predictor != "intertidal_fs_c1_1500_ed", ]
   }
   pis <- tidyr::drop_na(pis)
   pds <- tidyr::drop_na(pds)
-
-  # drop stixels covering less than 10% of focal area, bring in % coverage
-  pis <- dplyr::inner_join(pis, stixel_coverage, by = "stixel_id")
-  pds <- dplyr::inner_join(pds, stixel_coverage, by = "stixel_id")
 
   if (nrow(pis) == 0 || nrow(pds) == 0) {
     warning("No stixels within the provided extent.")
     return(NULL)
   }
 
-  # pivot pis to long format
-  stix_cols <- c("stixel_id", "lat", "lon", "date", "coverage")
-  piv_cols <- setdiff(names(pis), stix_cols)
-  pis <- tidyr::pivot_longer(pis, cols = dplyr::all_of(piv_cols),
-                             names_to = "predictor",
-                             values_to = "importance")
-
   # subset to cover classes
-  preds <- ebirdst::ebirdst_predictors$predictor_tidy
+  preds <- ebirdst::ebirdst_predictors$predictor
   preds <- preds[stringr::str_detect(preds,
                                      "^(intertidal|mcd12q1|gp_rtp|astwbd|ntl)")]
   # drop variation metrics
@@ -176,12 +192,10 @@ ebirdst_habitat <- function(path, ext, pis = NULL, pds = NULL, stixels = NULL) {
   pds <- pds[pds$predictor %in% preds, ]
 
   # calculate pd slopes
-  pd_slope <- pds[, c("stixel_id", "date", "predictor",
+  pd_slope <- pds[, c("stixel_id", "day_of_year", "predictor",
                       "predictor_value", "response")]
   rm(pds)
-  pd_slope <- tidyr::nest(pd_slope, data = -dplyr::all_of(c("stixel_id",
-                                                            "date",
-                                                            "predictor")))
+  pd_slope <- tidyr::nest(pd_slope, data = c("predictor_value", "response"))
   sl <- vapply(pd_slope$data, FUN = lm_slope, FUN.VALUE = numeric(1))
   # convert to binary
   pd_slope$slope <- as.numeric(sl > 0)
@@ -191,19 +205,31 @@ ebirdst_habitat <- function(path, ext, pis = NULL, pds = NULL, stixels = NULL) {
 
   # temporal smoothing of pds
   pd_smooth <- dplyr::select(pd_slope, .data$predictor,
-                             x = .data$date, y = .data$slope,
-                             weight = .data$coverage)
-  rm(pd_slope)
-  pd_smooth <- tidyr::drop_na(pd_smooth)
-  pd_smooth <- tidyr::nest(pd_smooth, data = -dplyr::all_of("predictor"))
-  pd_smooth$smooth <- lapply(pd_smooth[["data"]],
-                             FUN = loess_smooth,
-                             predict_to = ebirdst::ebirdst_weeks$week_midpoint,
-                             na_value = NA_real_,
-                             check_width = 7 / 366)
-  pd_smooth$data <- NULL
-  pd_smooth <- tidyr::unnest(pd_smooth, .data$smooth)
-  names(pd_smooth) <- c("predictor", "date", "prob_pos_slope")
+                             x = .data$day_of_year, y = .data$slope,
+                             .data$weight)
+  if (isTRUE(stationary_associations)) {
+    # for stationary assocations, simply calculate the weighted average
+    pd_smooth <- dplyr::group_by(pd_smooth, .data$predictor)
+    pd_smooth <- dplyr::summarise(pd_smooth,
+                                  prob_pos_slope = weighted_mean(.data$y,
+                                                                 .data$weight))
+    pd_smooth <- dplyr::ungroup(pd_smooth)
+  } else {
+    # convert from day of year to year fraction
+    pd_smooth[["x"]] <- pd_smooth[["x"]] / 366
+    rm(pd_slope)
+    pd_smooth <- tidyr::drop_na(pd_smooth)
+    pd_smooth <- tidyr::nest(pd_smooth, data = c("x", "y", "weight"))
+    pred_weeks <- ebirdst::ebirdst_weeks$week_midpoint
+    pd_smooth$smooth <- lapply(pd_smooth[["data"]],
+                               FUN = loess_smooth,
+                               predict_to = pred_weeks,
+                               na_value = NA_real_,
+                               check_width = 7 / 366)
+    pd_smooth$data <- NULL
+    pd_smooth <- tidyr::unnest(pd_smooth, .data$smooth)
+    names(pd_smooth) <- c("predictor", "week_midpoint", "prob_pos_slope")
+  }
 
   # categorize positive and negative directionalities
   pd_smooth$prob_pos_slope <- pmin(pmax(0, pd_smooth$prob_pos_slope), 1)
@@ -212,96 +238,113 @@ ebirdst_habitat <- function(path, ext, pis = NULL, pds = NULL, stixels = NULL) {
   pd_smooth$direction[pd_smooth$prob_pos_slope <= 0.3] <- -1
 
   # temporal smoothing of pis
-  pi_smooth <- dplyr::select(pis, .data$predictor,
-                             x = .data$date, y = .data$importance,
-                             weight = .data$coverage)
-  # log transform
-  pi_smooth$y <- log(pi_smooth$y + 0.001)
-  pi_smooth <- tidyr::nest(pi_smooth, data = -dplyr::all_of("predictor"))
-  pi_smooth$smooth <- lapply(pi_smooth[["data"]],
-                             FUN = loess_smooth,
-                             predict_to = ebirdst::ebirdst_weeks$week_midpoint,
-                             na_value = 0,
-                             check_width = 7 / 366)
-  pi_smooth$data <- NULL
-  pi_smooth <- tidyr::unnest(pi_smooth, .data$smooth)
-  # back transform
-  pi_smooth$y <- exp(pi_smooth$y)
-  # scale pis
-  pi_smooth <- dplyr::group_by(pi_smooth, .data$x)
-  pi_smooth <- dplyr::mutate(pi_smooth,
-                             y = .data$y / sum(.data$y, na.rm = TRUE))
-  pi_smooth <- dplyr::ungroup(pi_smooth)
-  names(pi_smooth) <- c("predictor", "date", "importance")
-  rm(pis)
+  pi_smooth <- dplyr::inner_join(pis, stixel_coverage, by = "stixel_id")
+  pi_smooth <- dplyr::select(pi_smooth, .data$predictor,
+                             x = .data$day_of_year, y = .data$importance,
+                             .data$weight)
+  if (isTRUE(stationary_associations)) {
+    # for stationary assocations, simply calculate the weighted average
+    pi_smooth <- dplyr::group_by(pi_smooth, .data$predictor)
+    pi_smooth <- dplyr::summarise(pi_smooth,
+                                  importance = weighted_mean(.data$y,
+                                                             .data$weight))
+    pi_smooth <- dplyr::ungroup(pi_smooth)
+    # scale pis
+    total_importance <- sum(pi_smooth$importance, na.rm = TRUE)
+    pi_smooth$importance <- pi_smooth$importance / total_importance
+  } else {
+    # convert from day of year to year fraction
+    pi_smooth[["x"]] <- pi_smooth[["x"]] / 366
+    # log transform
+    pi_smooth$y <- log(pi_smooth$y + 0.001)
+    pi_smooth <- tidyr::nest(pi_smooth, data = -dplyr::all_of("predictor"))
+    pi_smooth$smooth <- lapply(pi_smooth[["data"]],
+                               FUN = loess_smooth,
+                               predict_to = pred_weeks,
+                               na_value = 0,
+                               check_width = 7 / 366)
+    pi_smooth$data <- NULL
+    pi_smooth <- tidyr::unnest(pi_smooth, .data$smooth)
+    # back transform
+    pi_smooth$y <- exp(pi_smooth$y)
+    # scale pis
+    pi_smooth <- dplyr::group_by(pi_smooth, .data$x)
+    pi_smooth <- dplyr::mutate(pi_smooth,
+                               y = .data$y / sum(.data$y, na.rm = TRUE))
+    pi_smooth <- dplyr::ungroup(pi_smooth)
+    names(pi_smooth) <- c("predictor", "week_midpoint", "importance")
+    rm(pis)
+  }
 
-  # multiply importance and direction
-  pipd <- dplyr::inner_join(pi_smooth, pd_smooth, by = c("predictor", "date"))
-  rm(pi_smooth, pd_smooth)
-  structure(pipd,
+  output_cols <- c("predictor", "week", "importance",
+                   "prob_pos_slope", "direction")
+  if (isTRUE(stationary_associations)) {
+    pipd <- dplyr::inner_join(pi_smooth, pd_smooth, by = "predictor")
+    output_cols <- setdiff(output_cols, "week")
+  } else {
+    # multiply importance and direction
+    pipd <- dplyr::inner_join(pi_smooth, pd_smooth,
+                              by = c("predictor", "week_midpoint"))
+    # assign correct dates
+    w <-  ebirdst::ebirdst_weeks
+    pipd$week <- format(w$date[match(pipd$week_midpoint, w$week_midpoint)],
+                        "%m-%d")
+  }
+
+  structure(pipd[, output_cols],
             class = c("ebirdst_habitat", class(pipd)),
             extent = ext)
 }
 
 #' @param x [ebirdst_habitat] object; habitat relationships as calculated by
 #'   [ebirdst_habitat()].
-#' @param n_predictors number of predictors to include in the cake plot. The
-#'   most important set of predictors will be chosen based on the maximum weekly
-#'   importance value across the whole year.
-#' @param date_range the range of dates for plotting; a 2-element vector of the
-#'   start and end dates of the date range, provided either as dates (Date
-#'   objects or strings in ISO format "YYYY-MM-DD") or numbers between 0 and 1
-#'   representing the fraction of the year. When providing dates as a string,
-#'   the year can be omitted (i.e. "MM-DD"). By default the full year of data
-#'   are plotted.
+#' @param n_habitat_types number of habitat types to include in the cake plot.
+#'   The most important set of predictors will be chosen based on the maximum
+#'   weekly importance value across the whole year.
 #' @param ... ignored.
 #'
 #' @export
 #' @rdname ebirdst_habitat
-plot.ebirdst_habitat <- function(x, n_predictors = 15,
-                                 date_range = c(0, 1),
-                                 ...) {
-  stopifnot(is.numeric(n_predictors), length(n_predictors) == 1,
-            n_predictors > 0)
-
-  # convert temporal extent
-  date_range <- process_t_extent(date_range)
-  data_date_range <- range(x$date, na.rm = TRUE)
-  if (date_range[1] >= date_range[2]) {
-    stop("Dates in date_range must be sequential.")
+plot.ebirdst_habitat <- function(x, n_habitat_types = 15, ...) {
+  stopifnot(is.numeric(n_habitat_types), length(n_habitat_types) == 1,
+            n_habitat_types > 0)
+  if (!"week" %in% names(x)) {
+    stop("Habitat association plots are only possible with ",
+         "stationary_associations = FALSE")
   }
-  date_range[1] <- max(date_range[1], data_date_range[1])
-  date_range[2] <- min(date_range[2], data_date_range[2])
-  date_range <- from_srd_date(date_range)
+
+  # convert to date
+  x$week <- as.Date(paste(ebirdst_version()[["version_year"]],
+                          x$week, sep = "-"))
+  date_range <- as.Date(paste(ebirdst_version()[["version_year"]],
+                              c("01-01", "12-31"), sep = "-"))
 
   # subset to top predictors
-  x <- subset_top_predictors(x, n_predictors = n_predictors)
+  x <- subset_top_predictors(x, n_habitat_types = n_habitat_types)
 
   # max weekly stack height
-  y_max <- dplyr::group_by(x, .data$date,
-                           direction = sign(.data$pi_direction))
+  y_max <- dplyr::group_by(x, .data$week,
+                           direction = sign(.data$habitat_association))
   y_max <- dplyr::summarise(y_max,
-                            height = sum(.data$pi_direction, na.rm = TRUE),
+                            height = sum(.data$habitat_association,
+                                         na.rm = TRUE),
                             .groups = "drop")
   y_max <- max(abs(y_max$height), na.rm = TRUE)
 
-  # assign weeks
-  w <- ebirdst::ebirdst_weeks
-  x$iso_date <- w$date[match(x$date, w$week_midpoint)]
-
   # order by importance
-  x$predictor <- stats::reorder(x$predictor, x$pi_direction,
-                                FUN = function(x) {mean(abs(x))})
+  x$habitat_code <- stats::reorder(x$habitat_code,
+                                   x$habitat_association,
+                                   FUN = function(x) {mean(abs(x))})
   # get colors
-  hc <- habitat_colors[habitat_colors$habitat_code %in% x$predictor, ]
-  #hc$habitat_code <- factor(hc$habitat_code, levels = rev(levels(x$predictor)))
+  hc <- habitat_colors[habitat_colors$habitat_code %in% x$habitat_code, ]
   hc <- dplyr::arrange(hc, .data$legend_order)
 
   # cake plot
   g <- ggplot2::ggplot(x) +
-    ggplot2::aes_string(x = "iso_date", y = "pi_direction",
-                        fill = "predictor",
-                        group = "predictor", order = "predictor") +
+    ggplot2::aes_string(x = "week", y = "habitat_association",
+                        fill = "habitat_code",
+                        group = "habitat_code",
+                        order = "habitat_code") +
     ggplot2::geom_area(colour = "white", size = 0.1) +
     ggplot2::geom_vline(xintercept = date_range[1], size = 0.25) +
     ggplot2::geom_vline(xintercept = date_range[2], size = 0.25) +
@@ -310,12 +353,12 @@ plot.ebirdst_habitat <- function(x, n_predictors = 15,
                           date_breaks = "1 month",
                           date_labels = "%b") +
     ggplot2::ylim(-y_max, y_max) +
-    ggplot2::scale_fill_manual(values = hc$habitat_color,
+    ggplot2::scale_fill_manual(values = hc$color,
                                breaks = hc$habitat_code,
-                               label = hc$habitat_description) +
+                               label = hc$habitat_name) +
     ggplot2::labs(x = NULL,
                   y = "Importance (+/-)",
-                  fill = "Predictor",
+                  fill = "Habitat",
                   title = "Habitat associations (occurrence model)") +
     ggplot2::theme_light() +
     ggplot2::theme(legend.key.size = ggplot2::unit(1, "line"))
@@ -326,6 +369,8 @@ plot.ebirdst_habitat <- function(x, n_predictors = 15,
 
 
 # internal functions ----
+
+
 
 lm_slope <- function(data) {
   stopifnot(is.data.frame(data), ncol(data) == 2)
@@ -399,46 +444,52 @@ train_check <- function(x, x_train, x_range, check_width) {
   return(pass)
 }
 
-subset_top_predictors <- function(x, n_predictors = 15) {
+subset_top_predictors <- function(x, n_habitat_types = 15) {
   # bring in pretty names
   lc <- dplyr::select(ebirdst::ebirdst_predictors,
-                      predictor = .data$predictor_tidy,
+                      predictor = .data$predictor,
                       .data$predictor_label,
                       .data$lc_class,
                       .data$lc_class_label)
   x <- dplyr::inner_join(lc, x, by = "predictor")
 
   # multiply importance and direction, fill with zeros
-  x$pi_direction <- dplyr::coalesce(x$importance * x$direction, 0)
+  x$habitat_association <- dplyr::coalesce(x$importance * x$direction, 0)
 
   # group roads
   x <- dplyr::group_by(x,
-                       predictor = .data$lc_class,
-                       label = .data$lc_class_label,
-                       .data$date)
+                       habitat_code = .data$lc_class,
+                       habitat_name = .data$lc_class_label,
+                       .data$week)
   x <- dplyr::summarise(x,
                         importance = sum(.data$importance, na.rm = TRUE),
-                        pi_direction = sum(.data$pi_direction, na.rm = TRUE),
+                        habitat_association = sum(.data$habitat_association,
+                                                  na.rm = TRUE),
                         .groups = "drop")
 
   # no significant associations
-  if (all(is.na(x$pi_direction))) {
+  if (all(is.na(x$habitat_association))) {
     warning("No significant habitat associations")
     return(x[NULL, ])
   }
 
   # pick top predictors based on max importance across weeks
-  top_pis <- dplyr::group_by(x[abs(x$pi_direction) > 0, ], .data$predictor)
+  top_pis <- dplyr::group_by(x[abs(x$habitat_association) > 0, ],
+                             .data$habitat_code)
   top_pis <- dplyr::summarise(top_pis,
                               importance = max(.data$importance),
                               .groups = "drop")
   top_pis <- dplyr::top_n(top_pis,
-                          n = min(n_predictors, nrow(top_pis)),
+                          n = min(n_habitat_types, nrow(top_pis)),
                           wt = .data$importance)
   # ensure there's always 15 at most
   top_pis <- dplyr::arrange(top_pis, -.data$importance)
   top_pis <- utils::head(top_pis, 15)
 
   # subset to top predictors
-  x[x$predictor %in% top_pis$predictor, ]
+  x[x$habitat_code %in% top_pis$habitat_code, ]
+}
+
+weighted_mean <- function(x, weight) {
+  sum(x * weight, na.rm = TRUE) / sum(weight, na.rm = TRUE)
 }

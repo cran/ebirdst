@@ -5,7 +5,7 @@
 \alias{plot.ebirdst_ppms}
 \title{eBird Status and Trends predictive performance metrics (PPMs)}
 \usage{
-ebirdst_ppms(path, ext, es_cutoff)
+ebirdst_ppms(path, ext, es_cutoff, pat_cutoff = 1/7)
 
 \method{plot}{ebirdst_ppms}(x, ...)
 }
@@ -17,12 +17,14 @@ or \code{get_species_path()}.}
 \item{ext}{\link{ebirdst_extent} object (optional); the spatiotemporal extent over
 which to calculate the PPMs.}
 
-\item{es_cutoff}{integer between 0-100; the ensemble support cutoff to use in
+\item{es_cutoff}{fraction between 0-1; the ensemble support cutoff to use in
 distinguishing zero and non-zero predictions. Optimal ensemble support
 cutoff values are calculated for each week during the modeling process and
 stored in the data package for each species. \strong{In general, you should not
 specify a value for \code{es_cutoff} and instead allow the function to use the
-species-specific model-base values.}}
+species-specific model-based values.}}
+
+\item{pat_cutoff}{numeric between 0-1; percent above threshold.}
 
 \item{x}{\link{ebirdst_ppms} object; PPMs as calculated by \code{\link[=ebirdst_ppms]{ebirdst_ppms()}}.}
 
@@ -33,7 +35,7 @@ An \code{ebirdst_pppms} object containing a list of three data frames:
 \code{binary_ppms}, \code{occ_ppms}, and \code{abd_ppms}. These data frames have 25 rows
 corresponding to 25 Monte Carlo iterations each estimating the PPMs using a
 spatiotemporal subsample of the test data. Columns correspond to the
-different PPMS. \code{binary_ppms} contains binary or range-based PPMS,
+different PPMs. \code{binary_ppms} contains binary or range-based PPMs,
 \code{occ_ppms} contains within-range occurrence probability PPMs, and
 \code{abd_ppms} contains within-range abundance PPMs. In some cases, PPMs may be
 missing, either because there isn't a large enough test set within the
@@ -64,7 +66,7 @@ abundance. Both the occurrence and count PPMs are within-range metrics,
 meaning the comparison between observations and predictions is only made
 within the range where the species occurs.
 
-Prior to calculating PPMS, the test dataset is subsampled spatiotemporally
+Prior to calculating PPMs, the test dataset is subsampled spatiotemporally
 using \code{\link[=ebirdst_subset]{ebirdst_subset()}}. This process is performed for 25 monte carlo
 iterations resulting in 25 estimates of each PPM.
 }
@@ -76,8 +78,8 @@ path <- ebirdst_download("example_data", tifs_only = FALSE)
 path <- get_species_path("example_data")
 
 # define a spatiotemporal extent to calculate ppms over
-bb_vec <- c(xmin = -86, xmax = -83, ymin = 42.5, ymax = 44.5)
-e <- ebirdst_extent(bb_vec, t = c("05-01", "05-31"))
+bb_vec <- c(xmin = -90, xmax = -82, ymin = 41, ymax = 48)
+e <- ebirdst_extent(bb_vec, t = c("05-01", "07-31"))
 
 # compute predictive performance metrics
 ppms <- ebirdst_ppms(path = path, ext = e)

@@ -2,9 +2,8 @@ context("PPM functions")
 
 skip_on_cran()
 
-path <- ebirdst_download("example_data", tifs_only = FALSE)
-e <- ebirdst_extent(c(xmin = -86, xmax = -85, ymin = 42, ymax = 43),
-                    t = c(0.5, 0.6))
+e <- ebirdst_extent(c(xmin = -90, xmax = -82, ymin = 41, ymax = 48),
+                    t = c(0.25, 0.75))
 ppm <- ebirdst_ppms(path, ext = e)
 wk <- ebirdst_ppms_ts(path, ext = e, summarize_by = "weeks")
 mt <- ebirdst_ppms_ts(path, ext = e, summarize_by = "months")
@@ -62,12 +61,6 @@ test_that("plot ebirdst_ppms", {
 test_that("plot ebirdst_ppms_ts", {
   # weeks
   expect_silent(plot(wk))
-  # binary, kappa
-  expect_silent(plot(wk, type = "binary", metric = "kappa"))
-  # occurrence, sensitivity
-  expect_silent(plot(wk, type = "occurrence", metric = "sensitivity"))
-  # abundance, poisson deviance
-  expect_silent(plot(wk, type = "abundance", metric = "poisson_dev_abd"))
 
   # months
   expect_silent(plot(mt))

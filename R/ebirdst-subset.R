@@ -25,7 +25,7 @@
 #' e <- ebirdst_extent(bb_vec, t = c("05-01", "05-31"))
 #'
 #' # load and subset raster data
-#' abd <- load_raster(path, product = "abundance")
+#' abd <- load_raster(path, product = "abundance", resolution = "lr")
 #' abd_ss <- ebirdst_subset(abd, ext = e)
 #' }
 ebirdst_subset <- function(x, ext) {
@@ -35,8 +35,9 @@ ebirdst_subset <- function(x, ext) {
 #' @export
 #' @describeIn ebirdst_subset PI or PD data
 ebirdst_subset.data.frame <- function(x, ext) {
-  stopifnot(all(c("date", "lon", "lat") %in% names(x)))
-  stopifnot(is.numeric(x$date), all(x$date >= 0), all(x$date <= 1))
+  stopifnot(all(c("day_of_year", "longitude", "latitude") %in% names(x)))
+  stopifnot(is.numeric(x$day_of_year) || is.integer(x$day_of_year),
+            all(x$day_of_year >= 0), all(x$day_of_year <= 366.5))
   stopifnot(inherits(ext, "ebirdst_extent"))
 
   if (nrow(x) == 0) {
@@ -45,10 +46,11 @@ ebirdst_subset.data.frame <- function(x, ext) {
 
   # temporal filtering
   if (!identical(ext$t, c(0, 1))) {
-    if (ext$t[1] <= ext$t[2]) {
-      x <- x[x$date > ext$t[1] & x$date <= ext$t[2], ]
+    t_ext <- ext$t * 366
+    if (t_ext[1] <= t_ext[2]) {
+      x <- x[x$day_of_year > t_ext[1] & x$day_of_year <= t_ext[2], ]
     } else {
-      x <- x[x$date > ext$t[1] | x$date <= ext$t[2], ]
+      x <- x[x$day_of_year > t_ext[1] | x$day_of_year <= t_ext[2], ]
     }
   }
 
@@ -56,10 +58,10 @@ ebirdst_subset.data.frame <- function(x, ext) {
   e_ll <- project_extent(ext, crs = 4326)
   if (ext$type == "bbox") {
     b <- e_ll$extent
-    x <- x[x$lon > b["xmin"] & x$lon <= b["xmax"] &
-             x$lat > b["ymin"] & x$lat <= b["ymax"], ]
+    x <- x[x$longitude > b["xmin"] & x$longitude <= b["xmax"] &
+             x$latitude > b["ymin"] & x$latitude <= b["ymax"], ]
   } else if (ext$type == "polygon") {
-    x_sf <- sf::st_as_sf(x, coords = c("lon", "lat"), crs = 4326)
+    x_sf <- sf::st_as_sf(x, coords = c("longitude", "latitude"), crs = 4326)
     is_in <- suppressMessages(
       sf::st_intersects(x_sf, e_ll$extent, sparse = FALSE)
     )
@@ -77,16 +79,16 @@ ebirdst_subset.data.frame <- function(x, ext) {
 #' @export
 #' @describeIn ebirdst_subset  PI or PD data as an `sf` object
 ebirdst_subset.sf <- function(x, ext) {
-  stopifnot("date" %in% names(x))
-  stopifnot(all(x$date >= 0), all(x$date <= 1))
+  stopifnot("day_of_year" %in% names(x))
   stopifnot(inherits(ext, "ebirdst_extent"))
 
   # temporal filtering
   if (!identical(ext$t, c(0, 1))) {
-    if (ext$t[1] <= ext$t[2]) {
-      x <- x[x$date > ext$t[1] & x$date <= ext$t[2], ]
+    t_ext <- ext$t * 366
+    if (t_ext[1] <= t_ext[2]) {
+      x <- x[x$day_of_year > t_ext[1] & x$day_of_year <= t_ext[2], ]
     } else {
-      x <- x[x$date > ext$t[1] | x$date <= ext$t[2], ]
+      x <- x[x$day_of_year > t_ext[1] | x$day_of_year <= t_ext[2], ]
     }
   }
 
@@ -145,6 +147,8 @@ ebirdst_subset.Raster <- function(x, ext) {
   return(x)
 }
 
+
+# internal ----
 
 bbox_to_extent <- function(x) {
   raster::extent(x[["xmin"]], x[["xmax"]], x[["ymin"]], x[["ymax"]])
