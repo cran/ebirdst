@@ -1,6 +1,6 @@
-58d3b1b63eb38a19a47f9e0fdbfb9abf *DESCRIPTION
+d7838ca7f3ae35548c03ac68e08d8af2 *DESCRIPTION
 6bad1d2ff0b1f0a9899c8017158c7de3 *NAMESPACE
-5b8d6663b5bca433b71f3019517e42d2 *NEWS.md
+dabec48c962ec26cdccd211a65db367e *NEWS.md
 52a322000fdb4c9337b48edce662dcc5 *R/abundance-palette.R
 5f670fd1adfb2272c5c407b5fd1ef618 *R/access-key.R
 a8d8d4bfc068da673a912e3e8a3119ca *R/data.R
@@ -25,12 +25,12 @@ dba7b4213de07bc58627f2278296caae *data/ebirdst_weeks.rda
 a3021c493cebc1fb7b1367b23118df4a *inst/CITATION
 f0be4bb87263d8f9e3e4e8209ef33517 *inst/doc/ebirdst.R
 9a8383d63efbeed374502364a2d601e2 *inst/doc/ebirdst.Rmd
-8b72d1a4a663679e33187090cb6b1f32 *inst/doc/ebirdst.html
+8b446319b7d0787f1e3a3d47a3d8c9b2 *inst/doc/ebirdst.html
 5007f639f4bcd7760edcbff8707d5bfa *inst/doc/product-changelog.Rmd
 4cf647830bfd9bbe43b18b3673d6531c *inst/doc/product-changelog.html
 e0a772ad82b9f33ab9001a9e730adfdc *inst/doc/rasters.R
 d21c052135e2b15890e68b5b6be36082 *inst/doc/rasters.Rmd
-8158ead2a8930212194f756ba8efecec *inst/doc/rasters.html
+b9dbffb8fd44cbde36c9aa16f932b0f3 *inst/doc/rasters.html
 a5f9e169b13ddb7d65eb64e5800a59e6 *inst/extdata/example-data_file-list.txt
 be03a01d2399bbfdc479d182c0d1dd8d *man/abundance_palette.Rd
 6651a7a3d3f705027a50a76b9196a66e *man/bernoulli_dev.Rd
@@ -71,7 +71,7 @@ ed10617a76720a8d0096113107018045 *man/plot_pis.Rd
 c0dafccc26a1e9eba47fd13309d7a230 *man/set_ebirdst_access_key.Rd
 79e00149b13e6b044a4691037da2497b *man/stixelize.Rd
 2e6b2340c3fa7473f2b8f4b74c4e640b *tests/testthat.R
-45b5252bc54eef6ead16f8e95731fd43 *tests/testthat/setup.R
+9ecb0c632b03e24c4ccddaed8be1f137 *tests/testthat/setup.R
 bd43300c66edbff465c73402de882031 *tests/testthat/test_extent.R
 64655e0c078defdec8597852bd1cbfdf *tests/testthat/test_habitat.R
 5d91072dd5678db3d5dbbaed03c053c1 *tests/testthat/test_loading.R
