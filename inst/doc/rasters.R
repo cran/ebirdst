@@ -181,7 +181,8 @@ knitr::opts_chunk$set(eval = nzchar(Sys.getenv("BUILD_VIGNETTES")))
 #  ranges <- load_ranges(path, resolution = "lr", smoothed = FALSE)
 
 ## ----mean-rel-abd-------------------------------------------------------------
-#  pctpop <- exact_extract(pop_seasonal, mi_counties_proj, fun = "sum") %>%
+#  pctpop <- exact_extract(pop_seasonal, mi_counties_proj, fun = "sum",
+#                          progress = FALSE) %>%
 #    # attach county attributes
 #    mutate(county_code = mi_counties$county_code) %>%
 #    # transpose to long format, one season per row

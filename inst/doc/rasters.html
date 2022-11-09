@@ -12,7 +12,7 @@
 
 <meta name="author" content="Matt Strimas-Mackey, Tom Auer, Daniel Fink" />
 
-<meta name="date" content="2022-07-08" />
+<meta name="date" content="2022-11-09" />
 
 <title>Working with Raster Data</title>
 
@@ -334,7 +334,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">Working with Raster Data</h1>
 <h4 class="author">Matt Strimas-Mackey, Tom Auer, Daniel Fink</h4>
-<h4 class="date">2022-07-08</h4>
+<h4 class="date">2022-11-09</h4>
 
 
 
@@ -518,8 +518,8 @@ of attribution free contextual GIS data.</p>
 <span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>                      <span class="at">line =</span> <span class="sc">-</span><span class="fl">0.5</span>))</span></code></pre></div>
 </div>
 </div>
-<div id="extracting-trajectories-with-uncertainty-trajectories" class="section level1">
-<h1>Extracting trajectories with uncertainty {$trajectories}</h1>
+<div id="trajectories" class="section level1">
+<h1>Extracting trajectories with uncertainty</h1>
 <p>Next, we’ll look at the temporal component of the relative abundance
 data. Using the weekly relative abundance cubes, we can chart the change
 in relative abundance throughout the year for a fixed location.
@@ -610,14 +610,15 @@ ranges for these calculations.</p>
 <p>Percent of population in regions is one of the simplest statistics to
 calculate since a raster of percent of population is already provided;
 we simply sum all the raster cells within each region polygon.</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>pctpop <span class="ot">&lt;-</span> <span class="fu">exact_extract</span>(pop_seasonal, mi_counties_proj, <span class="at">fun =</span> <span class="st">&quot;sum&quot;</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># attach county attributes</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">county_code =</span> mi_counties<span class="sc">$</span>county_code) <span class="sc">%&gt;%</span> </span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="co"># transpose to long format, one season per row</span></span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="sc">-</span>county_code, </span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>               <span class="at">names_to =</span> <span class="st">&quot;season&quot;</span>, <span class="at">names_prefix =</span> <span class="st">&quot;sum.&quot;</span>,</span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>               <span class="at">values_to =</span> <span class="st">&quot;percent_population&quot;</span>)</span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(pctpop)</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>pctpop <span class="ot">&lt;-</span> <span class="fu">exact_extract</span>(pop_seasonal, mi_counties_proj, <span class="at">fun =</span> <span class="st">&quot;sum&quot;</span>, </span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>                        <span class="at">progress =</span> <span class="cn">FALSE</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># attach county attributes</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">county_code =</span> mi_counties<span class="sc">$</span>county_code) <span class="sc">%&gt;%</span> </span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># transpose to long format, one season per row</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="sc">-</span>county_code, </span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>               <span class="at">names_to =</span> <span class="st">&quot;season&quot;</span>, <span class="at">names_prefix =</span> <span class="st">&quot;sum.&quot;</span>,</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>               <span class="at">values_to =</span> <span class="st">&quot;percent_population&quot;</span>)</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(pctpop)</span></code></pre></div>
 <p>Let’s make a quick map comparing the breeding and non-breeding
 percent of population within counties in Michigan.</p>
 <div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># join back to county boundaries</span></span>

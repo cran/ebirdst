@@ -75,8 +75,8 @@ ebirdst_download <- function(species,
   # example data or a real run
   if (is_example) {
     api_url <- paste0("https://raw.githubusercontent.com/",
-                     "CornellLabofOrnithology/",
-                     "ebirdst/dev_erd2021/example-data/")
+                      "ebird/ebirdst_example-data/main/",
+                      "example-data/")
     # file list
     fl <- system.file("extdata", "example-data_file-list.txt",
                       package = "ebirdst")
@@ -89,7 +89,8 @@ ebirdst_download <- function(species,
     version_year <- ebirdst_version()[["version_year"]]
     species <- get_species(species)
     if (is.na(species)) {
-      stop("species does not uniquely identify a Status and Trends run.")
+      stop("The requested species was not modeled by Status and Trends. ",
+           "Consult ebirdst_runs for a complete list of available species.")
     }
 
     # api url and key
@@ -179,10 +180,15 @@ ebirdst_download <- function(species,
   # download
   old_timeout <- getOption("timeout")
   options(timeout = max(3000, old_timeout))
-  for (i in seq_len(nrow(files))) {
+  n_files <- nrow(files)
+  for (i in seq_len(n_files)) {
+    if (show_progress) {
+      message(stringr::str_glue("Downloading file {i} of {n_files}: ",
+                                "{basename(files$file[i])}"))
+    }
     dl_response <- utils::download.file(files$src_path[i],
                                         files$dest_path[i],
-                                        quiet = !show_progress,
+                                        quiet = TRUE,
                                         mode = "wb")
     if (dl_response != 0) {
       stop("Error downloading file: ", files$file[i])
@@ -287,7 +293,7 @@ ebirdst_data_dir <- function() {
 #' @examples
 #' ebirdst_version()
 ebirdst_version <- function() {
-  list(version_year = 2020,
-       release_year = 2021,
-       access_end_date = as.Date("2023-05-31"))
+  list(version_year = 2021,
+       release_year = 2022,
+       access_end_date = as.Date("2023-11-30"))
 }
