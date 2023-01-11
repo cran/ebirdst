@@ -1,3 +1,7 @@
+# ebirdst 1.2021.3
+
+- patch to fix a bug introduced in last release causing missing config files from data downloads [issue #44]
+
 # ebirdst 1.2021.2
 
 - fix bug causing species with same base code to be downloaded together, e.g. leafly also downloads leafly2 [issue #43]
