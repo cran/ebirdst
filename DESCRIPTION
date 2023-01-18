@@ -1,7 +1,7 @@
 Type: Package
 Package: ebirdst
 Title: Access and Analyze eBird Status and Trends Data
-Version: 1.2021.3
+Version: 2.2021.0
 Authors@R: c(
     person("Matthew", "Strimas-Mackey", , "mes335@cornell.edu", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-8929-7776")),
@@ -20,21 +20,20 @@ Description: Tools to download, load, plot, and analyze eBird Status and
     data to model global bird abundances, range boundaries, and habitat
     associations at a high spatial and temporal resolution.
 License: GPL-3
-URL: https://github.com/CornellLabofOrnithology/ebirdst
-BugReports: https://github.com/CornellLabofOrnithology/ebirdst/issues
+URL: https://github.com/ebird/ebirdst
+BugReports: https://github.com/ebird/ebirdst/issues
 Depends: R (>= 4.0.0)
-Imports: DBI, dplyr (>= 1.0.0), gbm, ggplot2, grDevices, gridExtra,
-        jsonlite, magrittr, mgcv, precrec, PresenceAbsence, raster (>=
-        3.1-5), rgdal, rlang, RSQLite, sf (>= 1.0-0), stats, stringr,
-        tidyr (>= 1.0.0), tools, utils, viridisLite
-Suggests: exactextractr, fields, knitr, rmarkdown, rnaturalearth,
-        testthat, withr
+Imports: DBI, dplyr (>= 1.0.0), ggplot2, grDevices, gridExtra,
+        jsonlite, magrittr, rlang, RSQLite, sf (>= 1.0-0), stats,
+        stringr, terra, tidyr (>= 1.0.0), tools, utils, viridisLite
+Suggests: fields, gbm, geodata, knitr, mgcv, precrec, PresenceAbsence,
+        rmarkdown, rnaturalearth, testthat, withr
 VignetteBuilder: knitr
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.2.1
 NeedsCompilation: no
-Packaged: 2023-01-10 20:59:05 UTC; mes335
+Packaged: 2023-01-18 21:38:07 UTC; mes335
 Author: Matthew Strimas-Mackey [aut, cre]
     (<https://orcid.org/0000-0001-8929-7776>),
   Shawn Ligocki [aut],
@@ -43,4 +42,4 @@ Author: Matthew Strimas-Mackey [aut, cre]
   Cornell Lab of Ornithology [cph]
 Maintainer: Matthew Strimas-Mackey <mes335@cornell.edu>
 Repository: CRAN
-Date/Publication: 2023-01-11 13:20:02 UTC
+Date/Publication: 2023-01-18 22:00:02 UTC
