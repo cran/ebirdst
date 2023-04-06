@@ -12,7 +12,7 @@
 
 <meta name="author" content="Matt Strimas-Mackey, Tom Auer, Daniel Fink" />
 
-<meta name="date" content="2023-01-18" />
+<meta name="date" content="2023-04-05" />
 
 <title>Introduction to eBird Status &amp; Trends Data</title>
 
@@ -341,7 +341,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <h1 class="title toc-ignore">Introduction to eBird Status &amp; Trends
 Data</h1>
 <h4 class="author">Matt Strimas-Mackey, Tom Auer, Daniel Fink</h4>
-<h4 class="date">2023-01-18</h4>
+<h4 class="date">2023-04-05</h4>
 
 
 
@@ -442,32 +442,7 @@ R.</strong></p>
 <h1>Species list</h1>
 <p>The full list of the species with data available for download is
 available in the data frame <code>ebirdst_runs</code>.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(ebirdst_runs)</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Rows: 2,070</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Columns: 23</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ species_code                         &lt;chr&gt; &quot;grerhe1&quot;, &quot;higtin1&quot;, &quot;gretin1&quot;, …</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ scientific_name                      &lt;chr&gt; &quot;Rhea americana&quot;, &quot;Nothocercus bo…</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ common_name                          &lt;chr&gt; &quot;Greater Rhea&quot;, &quot;Highland Tinamou…</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ resident                             &lt;lgl&gt; TRUE, TRUE, TRUE, TRUE, TRUE, TRU…</span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ breeding_quality                     &lt;dbl&gt; 2, 1, 2, 3, 3, 2, 2, 3, 2, 2, 2, …</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ breeding_range_modeled               &lt;lgl&gt; TRUE, TRUE, TRUE, TRUE, TRUE, TRU…</span></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ breeding_start                       &lt;date&gt; NA, NA, NA, NA, NA, NA, NA, NA, …</span></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ breeding_end                         &lt;date&gt; NA, NA, NA, NA, NA, NA, NA, NA, …</span></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ nonbreeding_quality                  &lt;dbl&gt; 2, 1, 2, 3, 3, 2, 2, 3, 2, 2, 2, …</span></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ nonbreeding_range_modeled            &lt;lgl&gt; TRUE, TRUE, TRUE, TRUE, TRUE, TRU…</span></span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ nonbreeding_start                    &lt;date&gt; NA, NA, NA, NA, NA, NA, NA, NA, …</span></span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ nonbreeding_end                      &lt;date&gt; NA, NA, NA, NA, NA, NA, NA, NA, …</span></span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ postbreeding_migration_quality       &lt;dbl&gt; 2, 1, 2, 3, 3, 2, 2, 3, 2, 2, 2, …</span></span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ postbreeding_migration_range_modeled &lt;lgl&gt; TRUE, TRUE, TRUE, TRUE, TRUE, TRU…</span></span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ postbreeding_migration_start         &lt;date&gt; NA, NA, NA, NA, NA, NA, NA, NA, …</span></span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ postbreeding_migration_end           &lt;date&gt; NA, NA, NA, NA, NA, NA, NA, NA, …</span></span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ prebreeding_migration_quality        &lt;dbl&gt; 2, 1, 2, 3, 3, 2, 2, 3, 2, 2, 2, …</span></span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ prebreeding_migration_range_modeled  &lt;lgl&gt; TRUE, TRUE, TRUE, TRUE, TRUE, TRU…</span></span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ prebreeding_migration_start          &lt;date&gt; NA, NA, NA, NA, NA, NA, NA, NA, …</span></span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ prebreeding_migration_end            &lt;date&gt; NA, NA, NA, NA, NA, NA, NA, NA, …</span></span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ resident_quality                     &lt;dbl&gt; 2, 1, 2, 3, 3, 2, 2, 3, 2, 2, 2, …</span></span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ resident_start                       &lt;date&gt; 2021-01-04, 2021-01-04, 2021-01-…</span></span>
-<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $ resident_end                         &lt;date&gt; 2021-12-28, 2021-12-28, 2021-12-…</span></span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(ebirdst_runs)</span></code></pre></div>
 <p>which is included in this package. If you’re working in RStudio, you
 can use <code>View()</code> to interactively explore this data frame.
 You can also consult the <a href="https://science.ebird.org/en/status-and-trends/">Status and Trends
@@ -607,34 +582,14 @@ load these data into R and takes arguments for <code>product</code>,
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># weekly, low res, median occurrence</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>occ_lr <span class="ot">&lt;-</span> <span class="fu">load_raster</span>(path, <span class="at">product =</span> <span class="st">&quot;occurrence&quot;</span>, <span class="at">resolution =</span> <span class="st">&quot;lr&quot;</span>)</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>occ_lr</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; class       : SpatRaster </span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; dimensions  : 626, 1502, 52  (nrow, ncol, nlyr)</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; resolution  : 26665.26, 26665.28  (x, y)</span></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; extent      : -20015109, 20036111, -6684911, 10007555  (xmin, xmax, ymin, ymax)</span></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; coord. ref. : +proj=sinu +lon_0=0 +x_0=0 +y_0=0 +R=6371007.181 +units=m +no_defs </span></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; source      : yebsap-example_occurrence_median_lr_2021.tif </span></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; names       : 2021-01-04,  2021-01-11,  2021-01-18,  2021-01-25,  2021-02-01, 2021-02-08, ... </span></span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; min values  : 0.00000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.00000000, ... </span></span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; max values  : 0.01231606, 0.008908954, 0.005192222, 0.005261947, 0.008574143, 0.01477458, ...</span></span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="co"># use parse_raster_dates() to get the date associated which each raster layer</span></span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="fu">parse_raster_dates</span>(occ_lr)</span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [1] &quot;2021-01-04&quot; &quot;2021-01-11&quot; &quot;2021-01-18&quot; &quot;2021-01-25&quot; &quot;2021-02-01&quot;</span></span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [6] &quot;2021-02-08&quot; &quot;2021-02-15&quot; &quot;2021-02-22&quot; &quot;2021-03-01&quot; &quot;2021-03-08&quot;</span></span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [11] &quot;2021-03-15&quot; &quot;2021-03-22&quot; &quot;2021-03-29&quot; &quot;2021-04-05&quot; &quot;2021-04-12&quot;</span></span>
-<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [16] &quot;2021-04-19&quot; &quot;2021-04-26&quot; &quot;2021-05-03&quot; &quot;2021-05-10&quot; &quot;2021-05-17&quot;</span></span>
-<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [21] &quot;2021-05-24&quot; &quot;2021-05-31&quot; &quot;2021-06-07&quot; &quot;2021-06-14&quot; &quot;2021-06-21&quot;</span></span>
-<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [26] &quot;2021-06-28&quot; &quot;2021-07-06&quot; &quot;2021-07-13&quot; &quot;2021-07-20&quot; &quot;2021-07-27&quot;</span></span>
-<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [31] &quot;2021-08-03&quot; &quot;2021-08-10&quot; &quot;2021-08-17&quot; &quot;2021-08-24&quot; &quot;2021-08-31&quot;</span></span>
-<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [36] &quot;2021-09-07&quot; &quot;2021-09-14&quot; &quot;2021-09-21&quot; &quot;2021-09-28&quot; &quot;2021-10-05&quot;</span></span>
-<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [41] &quot;2021-10-12&quot; &quot;2021-10-19&quot; &quot;2021-10-26&quot; &quot;2021-11-02&quot; &quot;2021-11-09&quot;</span></span>
-<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [46] &quot;2021-11-16&quot; &quot;2021-11-23&quot; &quot;2021-11-30&quot; &quot;2021-12-07&quot; &quot;2021-12-14&quot;</span></span>
-<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [51] &quot;2021-12-21&quot; &quot;2021-12-28&quot;</span></span>
-<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a><span class="co"># weekly, low res, abundance confidence intervals</span></span>
-<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>abd_lower <span class="ot">&lt;-</span> <span class="fu">load_raster</span>(path, <span class="at">product =</span> <span class="st">&quot;abundance&quot;</span>, <span class="at">metric =</span> <span class="st">&quot;lower&quot;</span>, </span>
-<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>                         <span class="at">resolution =</span> <span class="st">&quot;lr&quot;</span>)</span>
-<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>abd_upper <span class="ot">&lt;-</span> <span class="fu">load_raster</span>(path, <span class="at">product =</span> <span class="st">&quot;abundance&quot;</span>, <span class="at">metric =</span> <span class="st">&quot;upper&quot;</span>, </span>
-<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>                         <span class="at">resolution =</span> <span class="st">&quot;lr&quot;</span>)</span></code></pre></div>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># use parse_raster_dates() to get the date associated which each raster layer</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fu">parse_raster_dates</span>(occ_lr)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co"># weekly, low res, abundance confidence intervals</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>abd_lower <span class="ot">&lt;-</span> <span class="fu">load_raster</span>(path, <span class="at">product =</span> <span class="st">&quot;abundance&quot;</span>, <span class="at">metric =</span> <span class="st">&quot;lower&quot;</span>, </span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>                         <span class="at">resolution =</span> <span class="st">&quot;lr&quot;</span>)</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>abd_upper <span class="ot">&lt;-</span> <span class="fu">load_raster</span>(path, <span class="at">product =</span> <span class="st">&quot;abundance&quot;</span>, <span class="at">metric =</span> <span class="st">&quot;upper&quot;</span>, </span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>                         <span class="at">resolution =</span> <span class="st">&quot;lr&quot;</span>)</span></code></pre></div>
 <p>The GeoTIFFs use the same Sinusoidal projection as NASA MODIS data.
 This projection is ideal for analysis, as it is an equal are projection,
 but is not ideal for mapping since it introduces significant
@@ -665,24 +620,13 @@ example,</p>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">resolution =</span> <span class="st">&quot;lr&quot;</span>)</span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co"># season that each layer corresponds to</span></span>
 <span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(abd_seasonal_mean)</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;breeding&quot;               &quot;nonbreeding&quot;            &quot;prebreeding_migration&quot; </span></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [4] &quot;postbreeding_migration&quot;</span></span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="co"># just the breeding season layer</span></span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>abd_seasonal_mean[[<span class="st">&quot;breeding&quot;</span>]]</span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; class       : SpatRaster </span></span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; dimensions  : 626, 1502, 1  (nrow, ncol, nlyr)</span></span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; resolution  : 26665.26, 26665.28  (x, y)</span></span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; extent      : -20015109, 20036111, -6684911, 10007555  (xmin, xmax, ymin, ymax)</span></span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; coord. ref. : +proj=sinu +lon_0=0 +x_0=0 +y_0=0 +R=6371007.181 +units=m +no_defs </span></span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; source      : yebsap-example_abundance_seasonal_mean_lr_2021.tif </span></span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; name        :  breeding </span></span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; min value   : 0.0000000 </span></span>
-<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; max value   : 0.8364842</span></span>
-<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="co"># seasonal, low res, max occurrence</span></span>
-<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>occ_seasonal_max <span class="ot">&lt;-</span> <span class="fu">load_raster</span>(path, <span class="at">product =</span> <span class="st">&quot;occurrence&quot;</span>, </span>
-<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>                                <span class="at">period =</span> <span class="st">&quot;seasonal&quot;</span>, <span class="at">metric =</span> <span class="st">&quot;max&quot;</span>, </span>
-<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>                                <span class="at">resolution =</span> <span class="st">&quot;lr&quot;</span>)</span></code></pre></div>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co"># just the breeding season layer</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>abd_seasonal_mean[[<span class="st">&quot;breeding&quot;</span>]]</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="co"># seasonal, low res, max occurrence</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>occ_seasonal_max <span class="ot">&lt;-</span> <span class="fu">load_raster</span>(path, <span class="at">product =</span> <span class="st">&quot;occurrence&quot;</span>, </span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>                                <span class="at">period =</span> <span class="st">&quot;seasonal&quot;</span>, <span class="at">metric =</span> <span class="st">&quot;max&quot;</span>, </span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>                                <span class="at">resolution =</span> <span class="st">&quot;lr&quot;</span>)</span></code></pre></div>
 <p>Finally, as a convenience, the data products include year-round
 rasters summarizing the mean or max across all weeks that fall within a
 season that passed the expert review process. These can be accessed
@@ -710,23 +654,9 @@ range polygons can be loaded with <code>load_ranges()</code>:</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># seasonal, low res, smoothed ranges</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>ranges <span class="ot">&lt;-</span> <span class="fu">load_ranges</span>(path, <span class="at">resolution =</span> <span class="st">&quot;lr&quot;</span>)</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>ranges</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Simple feature collection with 4 features and 8 fields</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Geometry type: MULTIPOLYGON</span></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Dimension:     XY</span></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Bounding box:  xmin: -146.8346 ymin: 8.264292 xmax: -57.58661 ymax: 64.5614</span></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Geodetic CRS:  WGS 84</span></span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 4 × 9</span></span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   species_code scientific_n…¹ commo…² predi…³ type  season start_date end_date  </span></span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;        &lt;chr&gt;          &lt;chr&gt;     &lt;int&gt; &lt;chr&gt; &lt;chr&gt;  &lt;date&gt;     &lt;date&gt;    </span></span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 yebsap       Sphyrapicus v… Yellow…    2021 range breed… 2021-05-24 2021-08-17</span></span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 yebsap       Sphyrapicus v… Yellow…    2021 range nonbr… 2021-11-23 2021-03-08</span></span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 yebsap       Sphyrapicus v… Yellow…    2021 range postb… 2021-08-24 2021-11-16</span></span>
-<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 yebsap       Sphyrapicus v… Yellow…    2021 range prebr… 2021-03-15 2021-05-17</span></span>
-<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # … with 1 more variable: geom &lt;MULTIPOLYGON [°]&gt;, and abbreviated variable</span></span>
-<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; #   names ¹​scientific_name, ²​common_name, ³​prediction_year</span></span>
-<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="co"># subset to just the breeding season range using dplyr</span></span>
-<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>range_breeding <span class="ot">&lt;-</span> <span class="fu">filter</span>(ranges, season <span class="sc">==</span> <span class="st">&quot;breeding&quot;</span>)</span></code></pre></div>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co"># subset to just the breeding season range using dplyr</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>range_breeding <span class="ot">&lt;-</span> <span class="fu">filter</span>(ranges, season <span class="sc">==</span> <span class="st">&quot;breeding&quot;</span>)</span></code></pre></div>
 </div>
 <div id="habitat-association-and-ppm-data" class="section level2">
 <h2>Habitat association and PPM data</h2>
@@ -744,7 +674,7 @@ parameter <code>tifs_only = FALSE</code> in the
 <p>Fink, D., T. Auer, A. Johnston, V. Ruiz‐Gutierrez, W.M. Hochachka, S.
 Kelling. 2019. Modeling avian full annual cycle distribution and
 population trends with citizen science data. Ecological Applications,
-00(00):e02056. <a href="https://doi.org/10.1002/eap.2056" class="uri">https://doi.org/10.1002/eap.2056</a></p>
+00(00):e02056. doi: 10.1002/eap.2056</p>
 </div>
 </div>
 
