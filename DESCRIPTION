@@ -1,7 +1,7 @@
 Type: Package
 Package: ebirdst
-Title: Access and Analyze eBird Status and Trends Data
-Version: 2.2021.3
+Title: Access and Analyze eBird Status and Trends Data Products
+Version: 3.2022.0
 Authors@R: c(
     person("Matthew", "Strimas-Mackey", , "mes335@cornell.edu", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-8929-7776")),
@@ -12,29 +12,28 @@ Authors@R: c(
            comment = c(ORCID = "0000-0002-8368-1248")),
     person("Cornell Lab of Ornithology", role = "cph")
   )
-Description: Tools to download, load, plot, and analyze eBird Status and
+Description: Tools for accessing and analyzing eBird Status and
     Trends Data Products
     (<https://science.ebird.org/en/status-and-trends>). eBird
     (<https://ebird.org/home>) is a global database of bird observations
     collected by member of the public. eBird Status and Trends uses these
-    data to model global bird abundances, range boundaries, and habitat
-    associations at a high spatial and temporal resolution.
+    data to model global bird distributions, abundances, and population trends 
+    at a high spatial and temporal resolution.
 License: GPL-3
 URL: https://github.com/ebird/ebirdst
 BugReports: https://github.com/ebird/ebirdst/issues
 Depends: R (>= 4.0.0)
-Imports: DBI, dplyr (>= 1.0.0), ggplot2, grDevices, gridExtra,
-        jsonlite, magrittr, rlang, RSQLite, sf (>= 1.0-0), stats,
-        stringr, terra (>= 1.6-3), tidyr (>= 1.0.0), tools, utils,
-        viridisLite
-Suggests: fields, gbm, geodata, knitr, mgcv, precrec, PresenceAbsence,
-        rmarkdown, rnaturalearth, testthat, withr
+Imports: arrow, dplyr (>= 1.0.0), grDevices, jsonlite, magrittr,
+        RColorBrewer, rlang, sf (>= 1.0-0), stats, stringr, terra (>=
+        1.6-3), tools, utils, viridisLite
+Suggests: fields, ggplot2, knitr, PresenceAbsence, rmarkdown,
+        rnaturalearth, testthat, withr
 VignetteBuilder: knitr
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.2.3
 NeedsCompilation: no
-Packaged: 2023-05-08 22:59:20 UTC; mes335
+Packaged: 2023-11-15 01:45:18 UTC; mes335
 Author: Matthew Strimas-Mackey [aut, cre]
     (<https://orcid.org/0000-0001-8929-7776>),
   Shawn Ligocki [aut],
@@ -43,4 +42,4 @@ Author: Matthew Strimas-Mackey [aut, cre]
   Cornell Lab of Ornithology [cph]
 Maintainer: Matthew Strimas-Mackey <mes335@cornell.edu>
 Repository: CRAN
-Date/Publication: 2023-05-09 07:00:06 UTC
+Date/Publication: 2023-11-15 09:20:02 UTC

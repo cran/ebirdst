@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>eBird Trends Data Products</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">eBird Trends Data Products</h1>
+
+
+
+<style type="text/css">
+.table {
+width: 75%;
+}
+</style>
+<p>The eBird Trends Data Products provide estimates of trends in
+relative abundance based on eBird data. Trend estimates are made on a 27
+km by 27 km grid for a single season per species (breeding,
+non-breeding, or resident). For further details on the methodology used
+to estimate these trends consult the associated paper:</p>
+<blockquote>
+Fink, D., Johnston, A., Strimas-Mackey, M., Auer, T., Hochachka, W. M.,
+Ligocki, S., Oldham Jaromczyk, L., Robinson, O., Wood, C., Kelling, S.,
+&amp; Rodewald, A. D. (2023). A Double machine learning trend model for
+citizen science data. Methods in Ecology and Evolution, 00, 1–14. <a href="https://doi.org/10.1111/2041-210X.14186" class="uri">https://doi.org/10.1111/2041-210X.14186</a>
+</blockquote>
+<p>Data users who are not comfortable in R should consider directly
+downloading the data from the <a href="https://science.ebird.org/en/status-and-trends/download-data">eBird
+Status and Trends website</a>.</p>
+<p>The data frame <code>ebirdst_runs</code> indicates which species have
+trends estimates with the <code>has_trends</code> column. We can filter
+the data frame and only select those columns relevant to trends.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="fu">library</span>(rnaturalearth)</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="fu">library</span>(sf)</span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="fu">library</span>(terra)</span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a><span class="fu">library</span>(ebirdst)</span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>trends_runs <span class="ot">&lt;-</span> ebirdst_runs <span class="sc">%&gt;%</span> </span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>  <span class="fu">filter</span>(has_trends) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a>  <span class="fu">select</span>(species_code, common_name,</span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a>         trends_season, trends_region,</span>
+<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a>         trends_start_year, trends_end_year,</span>
+<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a>         trends_start_date, trends_end_date,</span>
+<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a>         rsquared, beta0)</span>
+<span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a><span class="fu">glimpse</span>(trends_runs)</span></code></pre></div>
+<p>Information is provided on the trends model for each species,
+including two predictive performance metrics (<code>rsquared</code> and
+<code>beta0</code>) that are based on a comparison of actual and
+estimated trends for a suite of simulations (see Fink et al. 2023 for
+further details). The columns in the <code>trends_runs</code> data frame
+are as follows:</p>
+<ul>
+<li><code>species_code</code>: the alphanumeric eBird species code
+uniquely identifying the species.</li>
+<li><code>common_name</code>: the English common name of the
+species.</li>
+<li><code>trends_season</code>: season that the trend was estimated for:
+breeding, nonbreeding, or resident.</li>
+<li><code>trends_region</code>: the geographic region that the trend
+model was run for. Note that broadly distributed species (e.g. Barn
+Swallow) will only have trend estimates for a regional subset of their
+full range.</li>
+<li><code>trends_start_year/trends_end_year</code>: the start and end
+years of the trend time period.</li>
+<li><code>trends_start_date/trends_end_date</code>: the start and end
+dates (<code>MM-DD</code> format) of the season for which the trend was
+estimated.</li>
+<li><code>rsquared</code>: R-squared value comparing the actual and
+estimated trends from the simulations.</li>
+<li><code>beta0</code>: the intercept of a linear model fitting actual
+vs. estimated trends (<code>actual ~ estimated</code>) for the
+simulations. Positive values of <code>beta0</code> indicate that the
+models are systematically <em>underestimating</em> the simulated trend
+for this species.</li>
+</ul>
+<p>Note that some season dates span two calendar years, for example
+Canvasback has 2011-2021 trends estimates for a non-breeding season
+defined as December 20 to January 25. In this case, the first season
+will be December 20, 2011 to January 25, 2012.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>trends_runs <span class="sc">%&gt;%</span> </span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>  <span class="fu">filter</span>(common_name <span class="sc">==</span> <span class="st">&quot;Canvasback&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>  <span class="fu">select</span>(trends_start_year, trends_end_year, </span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>         trends_start_date, trends_end_date)</span></code></pre></div>
+<div id="download" class="section level1">
+<h1>Downloading data</h1>
+<p>Trends data access is granted through the same process as the eBird
+Status Data Products. If you haven’t already requested an API key,
+consult the relevant section in the <a href="https://ebird.github.io/ebirdst/articles/status.html#access">Introduction
+to eBird Status Data Products vignette</a>.</p>
+<p>Trends data can be downloaded for one or more species using
+<code>ebirdst_download_trends()</code>, where the first argument is a
+vector of common names, scientific names, or species codes. As with the
+Status Data Products, trends data will be downloaded to a centralized
+directory and file management and access is performed via `ebirdst. For
+example, let’s download the breeding season trends data for Sage
+Thrasher.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">ebirdst_download_trends</span>(<span class="st">&quot;Sage Thrasher&quot;</span>)</span></code></pre></div>
+</div>
+<div id="load" class="section level1">
+<h1>Loading data into R</h1>
+<p>Once the data are downloaded, the trends data for a set of species,
+can be loaded into R using the function <code>load_trends()</code>. For
+example, we can load the Sage Thrasher trends estimates we just
+downloaded with:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>trends_sagthr <span class="ot">&lt;-</span> <span class="fu">load_trends</span>(<span class="st">&quot;Sage Thrasher&quot;</span>)</span></code></pre></div>
+<p>Each row corresponds to the trend estimate for a 27 km by 27 km grid
+cell, identified by the <code>srd_id</code> column and with cell center
+given by the <code>longitude</code> and <code>latitude</code>
+coordinates. Columns beginning with <code>abd_ppy</code> provide
+estimates of the percent per year trend in relative abundance and 80%
+confidence intervals, while those beginning with <code>abd_trend</code>
+provide estimates of the cumulative trend in relative abundance and 80%
+confidence intervals over the time period. The <code>abd</code> column
+gives the relative abundance estimate for the middle of the trend time
+period (e.g. 2014 for a 2007-2021 trend). The
+<code>start_year/end_year</code> and <code>start_date/end_date</code>
+columns provide redundant information to that available in
+<code>ebirdst_runs</code>. Specifically for Sage Thrasher we have:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>trends_runs <span class="sc">%&gt;%</span> </span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  <span class="fu">filter</span>(common_name <span class="sc">==</span> <span class="st">&quot;Sage Thrasher&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  <span class="fu">select</span>(trends_start_year, trends_end_year,</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>         trends_start_date, trends_end_date)</span></code></pre></div>
+<p>This tells us that the trend estimates are for the breeding season
+(May 17 to July 12) for the period 2012-2022.</p>
+</div>
+<div id="spatial" class="section level1">
+<h1>Conversion to spatial formats</h1>
+<p>The eBird trends data are stored in a tabular format, where each row
+gives the trend estimate for a single cell in a 27 km by 27 km equal
+area grid. For each grid cell, the coordinates (longitude and latitude)
+are provided for the center of the grid cell. For many applications, an
+explicitly spatial format is more useful and these coordinates can be
+use to convert from the tabular format to either a vector or raster
+format.</p>
+<div id="spatial-points" class="section level2">
+<h2>Vector (points)</h2>
+<p>The tabular trend data can be converted into point vector features
+for use with the <code>sf</code> package using the <code>sf</code>
+function <code>st_as_sf()</code>.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>trends_sf <span class="ot">&lt;-</span> <span class="fu">st_as_sf</span>(trends_sagthr, </span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>                      <span class="at">coords =</span> <span class="fu">c</span>(<span class="st">&quot;longitude&quot;</span>, <span class="st">&quot;latitude&quot;</span>), </span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>                      <span class="at">crs =</span> <span class="dv">4326</span>)</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="fu">print</span>(trends_sf)</span></code></pre></div>
+<p>These points can then be exported to GeoPackage for use in a GIS such
+as QGIS or ArcGIS with</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="co"># be sure to modify the path to the file to save the file to directory of </span></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="co"># your choice on your hard drive</span></span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="fu">write_sf</span>(trends_sf, <span class="st">&quot;ebird-trends_sagthr_2022.gpkg&quot;</span>,</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>         <span class="at">layer =</span> <span class="st">&quot;sagthr_trends&quot;</span>)</span></code></pre></div>
+</div>
+<div id="spatial-raster" class="section level2">
+<h2>Raster</h2>
+<p>The tabular trend estimates can most easily be converted to raster
+format for use with the <code>terra</code> package using the function
+<code>rasterize_trends()</code>. Any of the columns in the trends data
+frame can be selected using the <code>layers</code> argument and
+converted into layers in the resulting raster object.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="co"># rasterize the percent per year trend with confidence limits (default)</span></span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>ppy_raster <span class="ot">&lt;-</span> <span class="fu">rasterize_trends</span>(trends_sagthr)</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a><span class="fu">print</span>(ppy_raster)</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a><span class="co"># rasterize the cumulative trend estimate</span></span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>trends_raster <span class="ot">&lt;-</span> <span class="fu">rasterize_trends</span>(trends_sagthr, <span class="at">layers =</span> <span class="st">&quot;abd_trend&quot;</span>)</span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a><span class="fu">print</span>(trends_raster)</span></code></pre></div>
+<p>These raster objects can be exported to GeoTIFF files for use in a
+GIS such as QGIS or ArcGIS with</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="fu">writeRaster</span>(trends_raster, <span class="at">filename =</span> <span class="st">&quot;ebird-trends_sagthr_2021.tif&quot;</span>)</span></code></pre></div>
+<p>A simple map of these data can be produced from the raster data. For
+example, we’ll make a map of percent per year change in relative
+abundance for Sage Thrasher. Note that this is slightly different than
+the trends maps on the Status and Trends website, which show the
+cumulative trend rather than the annual trend.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="co"># define breaks and palettes similar to those on status and trends website</span></span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>breaks <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="dv">4</span>, <span class="dv">4</span>)</span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>breaks[<span class="dv">1</span>] <span class="ot">&lt;-</span> <span class="sc">-</span><span class="cn">Inf</span></span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>breaks[<span class="fu">length</span>(breaks)] <span class="ot">&lt;-</span> <span class="cn">Inf</span></span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a>pal <span class="ot">&lt;-</span> <span class="fu">ebirdst_palettes</span>(<span class="fu">length</span>(breaks) <span class="sc">-</span> <span class="dv">1</span>, <span class="at">type =</span> <span class="st">&quot;trends&quot;</span>)</span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a><span class="co"># make a simple map</span></span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a><span class="fu">plot</span>(ppy_raster[[<span class="st">&quot;abd_ppy&quot;</span>]], </span>
+<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a>     <span class="at">col =</span> pal, <span class="at">breaks =</span>  breaks,</span>
+<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">&quot;Sage Thrasher breeding trend 2012-2022 [% change per year]&quot;</span>,</span>
+<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a>     <span class="at">cex.main =</span> <span class="fl">0.75</span>,</span>
+<span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a>     <span class="at">axes =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
+</div>
+</div>
+<div id="uncertainty" class="section level1">
+<h1>Uncertainty</h1>
+<p>The model used to estimate trends produces an ensemble of 100
+estimates at each location, each based on a random subsample of eBird
+data. This ensemble of estimates is used to quantify uncertainty in the
+trends estimates. The estimated trend is the median across the ensemble,
+and the 80% confidence intervals are the lower 10th and upper 90th
+percentiles across the ensemble. Those wishing to access estimates from
+the individual folds making up the ensemble can use
+<code>fold_estimates = TRUE</code> when loading data. These fold-level
+estimates can be used to quantify uncertainty, for example, when
+calculating the trend for a given region. For example, let’s load the
+fold-level estimates for Sage Thrasher:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a>trends_sagthr_folds <span class="ot">&lt;-</span> <span class="fu">load_trends</span>(<span class="st">&quot;sagthr&quot;</span>, <span class="at">fold_estimates =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a><span class="fu">print</span>(trends_sagthr_folds)</span></code></pre></div>
+<p>This data frame is much more concise, only giving estimates of the
+mid-point relative abundance and percent per year trend in relative
+abundance for each of 100 folds for each grid cell.</p>
+<div id="applications-regional" class="section level2">
+<h2>Regional trends</h2>
+<p>eBird trend estimates are made on a 27 km by 27 km grid, which allows
+summarization over broader regions such as states or provinces. Since
+the relative abundance of a species varies throughout its range, we need
+to weight the mean trend calculation by relative abundance
+(<code>abd</code> in the trends data frame). To quantify uncertainty in
+the regional trend, we can use the fold-level data to produce 100
+distinct estimates of the regional trend, then calculate the median and
+80% confidence intervals. As an example, let’s calculate the state-level
+mean percent per year trends in relative abundance for Sage
+Thrasher.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="co"># boundaries of states in the united states</span></span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>states <span class="ot">&lt;-</span> <span class="fu">ne_states</span>(<span class="at">iso_a2 =</span> <span class="st">&quot;US&quot;</span>, <span class="at">returnclass =</span> <span class="st">&quot;sf&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>  <span class="fu">filter</span>(iso_a2 <span class="sc">==</span> <span class="st">&quot;US&quot;</span>, <span class="sc">!</span>postal <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;AK&quot;</span>, <span class="st">&quot;HI&quot;</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>  <span class="fu">transmute</span>(<span class="at">state =</span> iso_3166_2)</span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a></span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a><span class="co"># convert fold-level trends estimates to sf format</span></span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a>trends_sagthr_sf <span class="ot">&lt;-</span>  <span class="fu">st_as_sf</span>(trends_sagthr_folds, </span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a>                              <span class="at">coords =</span> <span class="fu">c</span>(<span class="st">&quot;longitude&quot;</span>, <span class="st">&quot;latitude&quot;</span>), </span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a>                              <span class="at">crs =</span> <span class="dv">4326</span>)</span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a></span>
+<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a><span class="co"># attach state to the fold-level trends data</span></span>
+<span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a>trends_sagthr_sf <span class="ot">&lt;-</span> <span class="fu">st_join</span>(trends_sagthr_sf, states, <span class="at">left =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a></span>
+<span id="cb12-14"><a href="#cb12-14" tabindex="-1"></a><span class="co"># abundance-weighted average trend by region and fold</span></span>
+<span id="cb12-15"><a href="#cb12-15" tabindex="-1"></a>trends_states_folds <span class="ot">&lt;-</span> trends_sagthr_sf <span class="sc">%&gt;%</span></span>
+<span id="cb12-16"><a href="#cb12-16" tabindex="-1"></a>  <span class="fu">st_drop_geometry</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb12-17"><a href="#cb12-17" tabindex="-1"></a>  <span class="fu">group_by</span>(state, fold) <span class="sc">%&gt;%</span></span>
+<span id="cb12-18"><a href="#cb12-18" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">abd_ppy =</span> <span class="fu">sum</span>(abd <span class="sc">*</span> abd_ppy) <span class="sc">/</span> <span class="fu">sum</span>(abd),</span>
+<span id="cb12-19"><a href="#cb12-19" tabindex="-1"></a>            <span class="at">.groups =</span> <span class="st">&quot;drop&quot;</span>)</span>
+<span id="cb12-20"><a href="#cb12-20" tabindex="-1"></a></span>
+<span id="cb12-21"><a href="#cb12-21" tabindex="-1"></a><span class="co"># summarize across folds for each state</span></span>
+<span id="cb12-22"><a href="#cb12-22" tabindex="-1"></a>trends_states <span class="ot">&lt;-</span> trends_states_folds <span class="sc">%&gt;%</span> </span>
+<span id="cb12-23"><a href="#cb12-23" tabindex="-1"></a>  <span class="fu">group_by</span>(state) <span class="sc">%&gt;%</span></span>
+<span id="cb12-24"><a href="#cb12-24" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">abd_ppy_median =</span> <span class="fu">median</span>(abd_ppy, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb12-25"><a href="#cb12-25" tabindex="-1"></a>            <span class="at">abd_ppy_lower =</span> <span class="fu">quantile</span>(abd_ppy, <span class="fl">0.10</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb12-26"><a href="#cb12-26" tabindex="-1"></a>            <span class="at">abd_ppy_upper =</span> <span class="fu">quantile</span>(abd_ppy, <span class="fl">0.90</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb12-27"><a href="#cb12-27" tabindex="-1"></a>            <span class="at">.groups =</span> <span class="st">&quot;drop&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb12-28"><a href="#cb12-28" tabindex="-1"></a>  <span class="fu">arrange</span>(abd_ppy_median)</span></code></pre></div>
+<p>We can join these state-level trends back to the state boundaries and
+make a map with <code>ggplot2</code>.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a>trends_states_sf <span class="ot">&lt;-</span> <span class="fu">left_join</span>(states, trends_states, <span class="at">by =</span> <span class="st">&quot;state&quot;</span>)</span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a><span class="fu">ggplot</span>(trends_states_sf) <span class="sc">+</span></span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="fu">aes</span>(<span class="at">fill =</span> abd_ppy_median)) <span class="sc">+</span></span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a>  <span class="fu">scale_fill_distiller</span>(<span class="at">palette =</span> <span class="st">&quot;Reds&quot;</span>, </span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a>                       <span class="at">limits =</span> <span class="fu">c</span>(<span class="cn">NA</span>, <span class="dv">0</span>),</span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a>                       <span class="at">na.value =</span> <span class="st">&quot;grey80&quot;</span>) <span class="sc">+</span></span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a>  <span class="fu">guides</span>(<span class="at">fill =</span> <span class="fu">guide_colorbar</span>(<span class="at">title.position =</span> <span class="st">&quot;top&quot;</span>, <span class="at">barwidth =</span> <span class="dv">15</span>)) <span class="sc">+</span></span>
+<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">&quot;Sage Thrasher state-level breeding trends 2012-2022&quot;</span>,</span>
+<span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a>       <span class="at">fill =</span> <span class="st">&quot;Relative abundance trend [% change / year]&quot;</span>) <span class="sc">+</span></span>
+<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
+<span id="cb13-11"><a href="#cb13-11" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">&quot;bottom&quot;</span>)</span></code></pre></div>
+<p>Based on these data, Sage Thrasher populations appear to be in
+decline throughout their entire range; however, some states (e.g. South
+Dakota) are experiencing much steeper declines than others
+(e.g. California).</p>
+</div>
+<div id="applications-multi" class="section level2">
+<h2>Multi-species trends</h2>
+<p>In some cases, we may be interested in the trend for an entire
+community of birds, which can be estimated by calculating the cell-wise
+mean trend across a suite of species. For example, the eBird Trends Data
+Products contain trend estimates for three species that breed in <a href="https://en.wikipedia.org/wiki/Sagebrush_steppe">sagebrush</a>:
+Brewer’s Sparrow, Sagebrush Sparrow, and Sage Thrasher. We can calculate
+an average trend for this group of species, which will provide an
+estimate of the trend in the sagebrush bird community. First let’s look
+at the model information to ensure all species are modeled for the same
+region, season, and range of years.</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a>sagebrush_species <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;Brewer&#39;s Sparrow&quot;</span>, <span class="st">&quot;Sagebrush Sparrow&quot;</span>, <span class="st">&quot;Sage Thrasher&quot;</span>)</span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a>trends_runs <span class="sc">%&gt;%</span> </span>
+<span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a>  <span class="fu">filter</span>(common_name <span class="sc">%in%</span> sagebrush_species)</span></code></pre></div>
+<p>Everything looks good, so we can proceed to compare trends for these
+species. Next we need to download the trends data for these species.
+Note that since we’ve already downloaded the Sage Thrasher data above it
+won’t be re-downloaded here.</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="fu">ebirdst_download_trends</span>(sagebrush_species)</span></code></pre></div>
+<p>Now we can load the trends and calculate the cell-wise mean.</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a>trends_sagebrush_species <span class="ot">&lt;-</span> <span class="fu">load_trends</span>(sagebrush_species)</span>
+<span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a></span>
+<span id="cb16-3"><a href="#cb16-3" tabindex="-1"></a><span class="co"># calculate mean trend for each cell</span></span>
+<span id="cb16-4"><a href="#cb16-4" tabindex="-1"></a>trends_sagebrush <span class="ot">&lt;-</span> trends_sagebrush_species <span class="sc">%&gt;%</span> </span>
+<span id="cb16-5"><a href="#cb16-5" tabindex="-1"></a>  <span class="fu">group_by</span>(srd_id, latitude, longitude) <span class="sc">%&gt;%</span> </span>
+<span id="cb16-6"><a href="#cb16-6" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">n_species =</span> <span class="fu">n</span>(),</span>
+<span id="cb16-7"><a href="#cb16-7" tabindex="-1"></a>            <span class="at">abd_ppy =</span> <span class="fu">mean</span>(abd_ppy, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb16-8"><a href="#cb16-8" tabindex="-1"></a>            <span class="at">.groups =</span> <span class="st">&quot;drop&quot;</span>)</span>
+<span id="cb16-9"><a href="#cb16-9" tabindex="-1"></a><span class="fu">print</span>(trends_sagebrush)</span></code></pre></div>
+<p>Finally, let’s make a map of these sagebrush trends, focusing only on
+those cells where all three species occur.</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a><span class="co"># convert the points to sf format</span></span>
+<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a>all_species <span class="ot">&lt;-</span> trends_sagebrush <span class="sc">%&gt;%</span> </span>
+<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a>  <span class="fu">filter</span>(n_species <span class="sc">==</span> <span class="fu">length</span>(sagebrush_species)) <span class="sc">%&gt;%</span> </span>
+<span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a>  <span class="fu">st_as_sf</span>(<span class="at">coords =</span> <span class="fu">c</span>(<span class="st">&quot;longitude&quot;</span>, <span class="st">&quot;latitude&quot;</span>),</span>
+<span id="cb17-5"><a href="#cb17-5" tabindex="-1"></a>           <span class="at">crs =</span> <span class="dv">4326</span>)</span>
+<span id="cb17-6"><a href="#cb17-6" tabindex="-1"></a></span>
+<span id="cb17-7"><a href="#cb17-7" tabindex="-1"></a><span class="co"># make a map</span></span>
+<span id="cb17-8"><a href="#cb17-8" tabindex="-1"></a><span class="fu">ggplot</span>(all_species) <span class="sc">+</span></span>
+<span id="cb17-9"><a href="#cb17-9" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="fu">aes</span>(<span class="at">color =</span> abd_ppy), <span class="at">size =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
+<span id="cb17-10"><a href="#cb17-10" tabindex="-1"></a>  <span class="fu">scale_color_gradient2</span>(<span class="at">low =</span> <span class="st">&quot;#CB181D&quot;</span>, <span class="at">high =</span> <span class="st">&quot;#2171B5&quot;</span>,</span>
+<span id="cb17-11"><a href="#cb17-11" tabindex="-1"></a>                        <span class="at">limits =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">4</span>, <span class="dv">4</span>), </span>
+<span id="cb17-12"><a href="#cb17-12" tabindex="-1"></a>                        <span class="at">oob =</span> scales<span class="sc">::</span>oob_squish) <span class="sc">+</span></span>
+<span id="cb17-13"><a href="#cb17-13" tabindex="-1"></a>  <span class="fu">guides</span>(<span class="at">color =</span> <span class="fu">guide_colorbar</span>(<span class="at">title.position =</span> <span class="st">&quot;left&quot;</span>, <span class="at">barheight =</span> <span class="dv">15</span>)) <span class="sc">+</span></span>
+<span id="cb17-14"><a href="#cb17-14" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">&quot;Sagebrush species breeding trends (2012-2022)&quot;</span>,</span>
+<span id="cb17-15"><a href="#cb17-15" tabindex="-1"></a>       <span class="at">color =</span> <span class="st">&quot;Relative abundance trend [% change / year]&quot;</span>) <span class="sc">+</span></span>
+<span id="cb17-16"><a href="#cb17-16" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
+<span id="cb17-17"><a href="#cb17-17" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.title =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">90</span>))</span></code></pre></div>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
