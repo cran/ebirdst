@@ -346,313 +346,501 @@ Applications</h1>
 width: 50%;
 }
 </style>
-<div id="load" class="section level1">
-<h1>Loading raster data</h1>
-<p>As covered in the <a href="https://ebird.github.io/ebirdst/articles/status.html">Introduction
-to eBird Status Data Products vignette</a>, the function
-<code>load_raster()</code> loads raster data products into R as
-<code>SpatRaster</code> objects, which we can work with using the
-<code>terra</code> package. Let’s start by loading the seasonal relative
-abundance raster for the example Yellow-bellied Sapsucker data. We’ll
-work with the low resolution (27 km) data in this vignette to ensure
-fast processing times.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(ebirdst)</span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">library</span>(terra)</span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="fu">library</span>(sf)</span>
-<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
-<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span>
+<p>This vignette will cover a variety of common applications of the
+eBird Status Data Products including producing maps, plotting migration
+chronologies, and estimating the proportion of the population of a
+species within a region. In the introductory vignette we worked with the
+small example dataset for Yellow-bellied Sapsucker, which does not
+require a data access key to download. To provide more realistic
+examples, throughout this vignette we will use complete datasets for
+several species. As a result, a <a href="https://ebird.github.io/ebirdst/articles/status.html#access">data
+access key</a> is required to run the code in this vignette.</p>
+<p>We start by loading the packages used throughout this vignette.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">library</span>(ebirdst)</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="fu">library</span>(fields)</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="fu">library</span>(lubridate)</span>
 <span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a><span class="fu">library</span>(rnaturalearth)</span>
-<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a><span class="fu">library</span>(geodata)</span>
-<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
-<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a><span class="fu">library</span>(fields)</span>
-<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a>extract <span class="ot">&lt;-</span> terra<span class="sc">::</span>extract</span>
-<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a></span>
-<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a><span class="co"># download the example yellow-bellied sapsucker data</span></span>
-<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a><span class="co"># this simplified dataset doesn&#39;t require an access key</span></span>
-<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a><span class="fu">ebirdst_download_status</span>(<span class="st">&quot;yebsap-example&quot;</span>, <span class="at">download_ranges =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a></span>
-<span id="cb1-16"><a href="#cb1-16" tabindex="-1"></a><span class="co"># load seasonal mean relative abundance at 27km resolution</span></span>
-<span id="cb1-17"><a href="#cb1-17" tabindex="-1"></a>abd_seasonal <span class="ot">&lt;-</span> <span class="fu">load_raster</span>(<span class="st">&quot;yebsap-example&quot;</span>, </span>
-<span id="cb1-18"><a href="#cb1-18" tabindex="-1"></a>                            <span class="at">product =</span> <span class="st">&quot;abundance&quot;</span>, </span>
-<span id="cb1-19"><a href="#cb1-19" tabindex="-1"></a>                            <span class="at">period =</span> <span class="st">&quot;seasonal&quot;</span>,</span>
-<span id="cb1-20"><a href="#cb1-20" tabindex="-1"></a>                            <span class="at">metric =</span> <span class="st">&quot;mean&quot;</span>,</span>
-<span id="cb1-21"><a href="#cb1-21" tabindex="-1"></a>                            <span class="at">resolution =</span> <span class="st">&quot;27km&quot;</span>)</span>
-<span id="cb1-22"><a href="#cb1-22" tabindex="-1"></a></span>
-<span id="cb1-23"><a href="#cb1-23" tabindex="-1"></a><span class="co"># get the seasons corresponding to each layer</span></span>
-<span id="cb1-24"><a href="#cb1-24" tabindex="-1"></a><span class="fu">names</span>(abd_seasonal)</span>
-<span id="cb1-25"><a href="#cb1-25" tabindex="-1"></a></span>
-<span id="cb1-26"><a href="#cb1-26" tabindex="-1"></a><span class="co"># extract just the breeding season relative abundance</span></span>
-<span id="cb1-27"><a href="#cb1-27" tabindex="-1"></a>abd_breeding <span class="ot">&lt;-</span> abd_seasonal[[<span class="st">&quot;breeding&quot;</span>]]</span></code></pre></div>
-<p>We can get the dates and quality scores associated with each of these
-seasons by filtering the <code>ebirdst_runs</code> data frame.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>ebirdst_runs <span class="sc">%&gt;%</span> </span>
-<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>  <span class="co"># note that the example data are for yellow-bellied sapsucker</span></span>
-<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>  <span class="fu">filter</span>(species_code <span class="sc">==</span> <span class="st">&quot;yebsap-example&quot;</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>  <span class="fu">glimpse</span>()</span></code></pre></div>
-</div>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a><span class="fu">library</span>(sf)</span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a><span class="fu">library</span>(terra)</span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a>extract <span class="ot">&lt;-</span> terra<span class="sc">::</span>extract</span></code></pre></div>
 <div id="map" class="section level1">
 <h1>Mapping relative abundance</h1>
 <p>In this section, we’ll demonstrate how to make a simple map of
-breeding season relative abundance. However, note that to make
-high-quality, publication-ready maps typically requires extra work. It
-many cases, it may be worthwhile designing maps in a traditional GIS
-environment such as QGIS or ArcGIS.</p>
+relative abundance within a given region. As an example, we’ll make a
+map of breeding season relative abundance for <a href="https://ebird.org/species/sagthr">Sage Trasher</a> in Wyoming. The
+maps produced using this approach are suitable for many applications;
+however, for high-quality publication-ready maps, it may be worthwhile
+using a traditional GIS environment such as QGIS or ArcGIS rather than
+R.</p>
+<p>We start by downloading data for Sage Thrasher and loading the
+breeding season relative abundance raster. The <code>pattern</code>
+argument to <code>ebirdst_download_status()</code> can be used to only
+download the specific files we need.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="co"># download the yellow-bellied sapsucker data</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="fu">ebirdst_download_status</span>(<span class="st">&quot;sagthr&quot;</span>,</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>                        <span class="at">pattern =</span> <span class="st">&quot;abundance_seasonal_mean&quot;</span>)</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="co"># load seasonal mean relative abundance at 3km resolution</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>abd_seasonal <span class="ot">&lt;-</span> <span class="fu">load_raster</span>(<span class="st">&quot;sagthr&quot;</span>, </span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>                            <span class="at">product =</span> <span class="st">&quot;abundance&quot;</span>, </span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>                            <span class="at">period =</span> <span class="st">&quot;seasonal&quot;</span>,</span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>                            <span class="at">metric =</span> <span class="st">&quot;mean&quot;</span>,</span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>                            <span class="at">resolution =</span> <span class="st">&quot;3km&quot;</span>)</span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a><span class="co"># extract just the breeding season relative abundance</span></span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a>abd_breeding <span class="ot">&lt;-</span> abd_seasonal[[<span class="st">&quot;breeding&quot;</span>]]</span></code></pre></div>
 <p>The simplest way to map the seasonal relative abundance data is to
 use the built in <code>plot()</code> function from the
 <code>terra</code> package.</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">plot</span>(abd_breeding, <span class="at">axes =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
-<p>Clearly this approach doesn’t work out of the box! There are a wide
+<p>Clearly this simple approach doesn’t work very well! There are a wide
 variety of issues that we’ll tackle one at a time.</p>
-<div id="extent" class="section level2">
-<h2>Extent</h2>
+<div id="map-extent" class="section level2">
+<h2>Cropping and masking</h2>
 <p>All raster data downloaded through this package are defined over the
-same global grid, regardless of the range of the individual species. The
-example data only has non-zero abundance within the state of Michigan,
-which is barely visible on the above global map. We need to define an
-extent for our map. There are a variety of ways to do this, but we’ll
-use the R package <code>rnaturalearth</code> to access a polygon
-boundary for Michigan, which we’ll then use to crop the raster.</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># boundary polygon for michigan</span></span>
-<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>mi <span class="ot">&lt;-</span> <span class="fu">ne_states</span>(<span class="at">iso_a2 =</span> <span class="st">&quot;US&quot;</span>, <span class="at">returnclass =</span> <span class="st">&quot;sf&quot;</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>  <span class="fu">filter</span>(postal <span class="sc">==</span> <span class="st">&quot;MI&quot;</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>  <span class="co"># project to same coordinate reference system as the raster data</span></span>
-<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>  <span class="fu">st_transform</span>(<span class="fu">st_crs</span>(abd_seasonal))</span>
-<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a></span>
-<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="co"># crop data to michigan</span></span>
-<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>abd_breeding_mi <span class="ot">&lt;-</span> <span class="fu">crop</span>(abd_breeding, mi)</span>
-<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a></span>
-<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co"># map the cropped data</span></span>
-<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="fu">plot</span>(abd_breeding_mi, <span class="at">axes =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
+same global grid, regardless of the range of the individual species. As
+a result, mapping these data will produce a global map by default.
+However, Sage Thrasher only occurs in the western United States, which
+is barely visible in the global map. We need to constrain the extent of
+our map to make it more useful. For this example, we’ll download a
+boundary for Wyoming (a state in the United States that harbors a large
+proportion of the breeding population of Sage Thrasher) and use it to
+crop and mask the relative abundance data. If you have a region defined
+in a Shapefile or GeoPackage you can instead load that a polygon
+defining the boundary of that region using <code>read_sf()</code>.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># wyoming boundary</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>region_boundary <span class="ot">&lt;-</span> <span class="fu">ne_states</span>(<span class="at">iso_a2 =</span> <span class="st">&quot;US&quot;</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>  <span class="fu">filter</span>(name <span class="sc">==</span> <span class="st">&quot;Wyoming&quot;</span>)</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="co"># project boundary to match raster data</span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>region_boundary_proj <span class="ot">&lt;-</span> <span class="fu">st_transform</span>(region_boundary, <span class="fu">st_crs</span>(abd_breeding))</span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="co"># crop and mask to boundary of wyoming</span></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>abd_breeding_mask <span class="ot">&lt;-</span> <span class="fu">crop</span>(abd_breeding, region_boundary_proj) <span class="sc">|&gt;</span> </span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a>  <span class="fu">mask</span>(region_boundary_proj)</span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co"># map the cropped data</span></span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="fu">plot</span>(abd_breeding_mask, <span class="at">axes =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
 </div>
-<div id="projection" class="section level2">
+<div id="map-projection" class="section level2">
 <h2>Projection</h2>
 <p>The raster data are all provided in the same equal area sinusoidal
 projection as NASA MODIS data. While this projection is suitable for
 analysis, it is not ideal for mapping since it introduces significant
-distortion. Instead, as part of the Status and Trends workflow, custom
-species-specific projections are provided that are optimized for the
-region that the species occurs within. We can access the projection for
-Yellow-bellied Sapsucker with <code>load_fac_map_parameters()</code>,
-then transform the raster data to this custom projection.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># load the mapping parameters</span></span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>fac_parameters <span class="ot">&lt;-</span> <span class="fu">load_fac_map_parameters</span>(<span class="st">&quot;yebsap-example&quot;</span>)</span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>crs <span class="ot">&lt;-</span> fac_parameters<span class="sc">$</span>custom_projection</span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a></span>
-<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co"># transform to the custom projection using nearest neighbor resampling</span></span>
-<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>abd_projected <span class="ot">&lt;-</span> <span class="fu">project</span>(abd_breeding_mi, crs, <span class="at">method =</span> <span class="st">&quot;near&quot;</span>)</span>
-<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a></span>
-<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co"># map the cropped and projected data</span></span>
-<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="fu">plot</span>(abd_projected, <span class="at">axes =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
+distortion. Instead, it’s best to select an equal area projection
+tailored to your region. A good general purpose choice is a Lambert’s
+azimuthal equal area projection centered on the focal region. This can
+be defined programmatically as follows.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># find the centroid of the region</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>region_centroid <span class="ot">&lt;-</span> region_boundary <span class="sc">|&gt;</span> </span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  <span class="fu">st_geometry</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>  <span class="fu">st_transform</span>(<span class="at">crs =</span> <span class="dv">4326</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>  <span class="fu">st_centroid</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>  <span class="fu">st_coordinates</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>  <span class="fu">round</span>(<span class="dv">1</span>)</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="co"># define projection</span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a>crs_laea <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">&quot;+proj=laea +lat_0=&quot;</span>, region_centroid[<span class="dv">2</span>],</span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a>                   <span class="st">&quot; +lon_0=&quot;</span>, region_centroid[<span class="dv">1</span>])</span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a></span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="co"># transform to the custom projection using nearest neighbor resampling</span></span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a>abd_breeding_laea <span class="ot">&lt;-</span> <span class="fu">project</span>(abd_breeding_mask, crs_laea, <span class="at">method =</span> <span class="st">&quot;near&quot;</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a>  <span class="co"># remove areas of the raster containing no data</span></span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a>  <span class="fu">trim</span>()</span>
+<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a></span>
+<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a><span class="co"># map the cropped and projected data</span></span>
+<span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a><span class="fu">plot</span>(abd_breeding_laea, <span class="at">axes =</span> <span class="cn">FALSE</span>, <span class="at">breakby =</span> <span class="st">&quot;cases&quot;</span>)</span></code></pre></div>
 </div>
-<div id="abundance-bins" class="section level2">
+<div id="map-bins" class="section level2">
 <h2>Abundance bins</h2>
 <p>The relative abundance data are not uniformly distributed, which can
 lead to challenges distinguishing areas of differing levels of
-abundance. To address this, we’ll use a quantile bins for the map, where
-each color in the legend corresponds to an equal number of cells in the
-raster. We’ll define these bins excluding zeros, then assign a separate
-color to the zeros. We can also use the function
+abundance. This is especially true for highly aggregatory species like
+shorebirds and ducks. To address this, we’ll use a quantile bins for the
+map, where each color in the legend corresponds to an equal number of
+cells in the raster. We’ll define these bins excluding zeros, then
+assign a separate color to the zeros. We can also use the function
 <code>abundance_palette()</code> to get the same set of colors we use in
 the legends on the eBird Status and Trends website.</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="co"># quantiles of non-zero values</span></span>
-<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>v <span class="ot">&lt;-</span> <span class="fu">values</span>(abd_projected)</span>
-<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>v <span class="ot">&lt;-</span> v[<span class="sc">!</span><span class="fu">is.na</span>(v) <span class="sc">&amp;</span> v <span class="sc">&gt;</span> <span class="dv">0</span>]</span>
-<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>bins <span class="ot">&lt;-</span> <span class="fu">quantile</span>(v, <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="at">by =</span> <span class="fl">0.1</span>))</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>v <span class="ot">&lt;-</span> <span class="fu">values</span>(abd_breeding_laea, <span class="at">na.rm =</span> <span class="cn">TRUE</span>, <span class="at">mat =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>v <span class="ot">&lt;-</span> v[v <span class="sc">&gt;</span> <span class="dv">0</span>]</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>breaks <span class="ot">&lt;-</span> <span class="fu">quantile</span>(v, <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="at">by =</span> <span class="fl">0.1</span>))</span>
 <span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="co"># add a bin for 0</span></span>
-<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>bins <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">0</span>, bins)</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>breaks <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">0</span>, breaks)</span>
 <span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a></span>
 <span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="co"># status and trends palette</span></span>
-<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>pal <span class="ot">&lt;-</span> <span class="fu">ebirdst_palettes</span>(<span class="fu">length</span>(bins) <span class="sc">-</span> <span class="dv">2</span>)</span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>pal <span class="ot">&lt;-</span> <span class="fu">ebirdst_palettes</span>(<span class="fu">length</span>(breaks) <span class="sc">-</span> <span class="dv">2</span>)</span>
 <span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="co"># add a color for zero</span></span>
 <span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a>pal <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;#e6e6e6&quot;</span>, pal)</span>
 <span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a></span>
 <span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a><span class="co"># map using the quantile bins</span></span>
-<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a><span class="fu">plot</span>(abd_projected, <span class="at">breaks =</span> bins, <span class="at">col =</span> pal, <span class="at">axes =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a><span class="fu">plot</span>(abd_breeding_laea, <span class="at">breaks =</span> breaks, <span class="at">col =</span> pal, <span class="at">axes =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
 </div>
-<div id="basemap" class="section level2">
+<div id="map-basemap" class="section level2">
 <h2>Basemap</h2>
 <p>Finally, we’ll add state and country boundaries to provide some
-context. The R package <code>rnaturalearth</code> is an excellent source
-of attribution free contextual GIS data.</p>
+context and generate a nicer legend. The R package
+<code>rnaturalearth</code> is an excellent source of attribution free
+contextual GIS data.</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="co"># natural earth boundaries</span></span>
-<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>countries <span class="ot">&lt;-</span> <span class="fu">ne_countries</span>(<span class="at">returnclass =</span> <span class="st">&quot;sf&quot;</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  <span class="fu">st_geometry</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  <span class="fu">st_transform</span>(crs)</span>
-<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>states <span class="ot">&lt;-</span> <span class="fu">ne_states</span>(<span class="at">iso_a2 =</span> <span class="st">&quot;US&quot;</span>, <span class="at">returnclass =</span> <span class="st">&quot;sf&quot;</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>  <span class="fu">st_geometry</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>  <span class="fu">st_transform</span>(crs)</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>countries <span class="ot">&lt;-</span> <span class="fu">ne_countries</span>(<span class="at">returnclass =</span> <span class="st">&quot;sf&quot;</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  <span class="fu">st_geometry</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  <span class="fu">st_transform</span>(crs_laea)</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>states <span class="ot">&lt;-</span> <span class="fu">ne_states</span>(<span class="at">iso_a2 =</span> <span class="st">&quot;US&quot;</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>  <span class="fu">st_geometry</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>  <span class="fu">st_transform</span>(crs_laea)</span>
 <span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a></span>
-<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="co"># define the map extent with the michigan polygon</span></span>
-<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a>mi_ext <span class="ot">&lt;-</span> mi <span class="sc">%&gt;%</span> </span>
-<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a>  <span class="fu">st_geometry</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a>  <span class="fu">st_transform</span>(crs)</span>
-<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a><span class="fu">plot</span>(mi_ext)</span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="co"># define the map plotting extent with the region boundary polygon</span></span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a>region_boundary_laea <span class="ot">&lt;-</span> region_boundary <span class="sc">|&gt;</span> </span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a>  <span class="fu">st_geometry</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a>  <span class="fu">st_transform</span>(crs_laea)</span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a><span class="fu">plot</span>(region_boundary_laea)</span>
 <span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a><span class="co"># add basemap</span></span>
 <span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a><span class="fu">plot</span>(countries, <span class="at">col =</span> <span class="st">&quot;#cfcfcf&quot;</span>, <span class="at">border =</span> <span class="st">&quot;#888888&quot;</span>, <span class="at">add =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a><span class="co"># add data</span></span>
-<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a><span class="fu">plot</span>(abd_projected, </span>
-<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a>     <span class="at">breaks =</span> bins, <span class="at">col =</span> pal, </span>
-<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a>     <span class="at">axes =</span> <span class="cn">FALSE</span>, <span class="at">legend =</span> <span class="cn">FALSE</span>, <span class="at">add =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a><span class="co"># add boundaries</span></span>
-<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a><span class="fu">plot</span>(countries, <span class="at">col =</span> <span class="cn">NA</span>, <span class="at">border =</span> <span class="st">&quot;#888888&quot;</span>, <span class="at">lwd =</span> <span class="dv">3</span>, <span class="at">add =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a><span class="fu">plot</span>(states, <span class="at">col =</span> <span class="cn">NA</span>, <span class="at">border =</span> <span class="st">&quot;#888888&quot;</span>, <span class="at">add =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a></span>
-<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a><span class="co"># add legend using the fields package</span></span>
-<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a><span class="co"># label the bottom, middle, and top</span></span>
-<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a>labels <span class="ot">&lt;-</span> <span class="fu">quantile</span>(bins, <span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">0.5</span>, <span class="dv">1</span>))</span>
-<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a>label_breaks <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="at">length.out =</span> <span class="fu">length</span>(bins))</span>
-<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a><span class="fu">image.plot</span>(<span class="at">zlim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>), <span class="at">breaks =</span> label_breaks, <span class="at">col =</span> pal,</span>
-<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a>           <span class="at">smallplot =</span> <span class="fu">c</span>(<span class="fl">0.90</span>, <span class="fl">0.93</span>, <span class="fl">0.15</span>, <span class="fl">0.85</span>),</span>
-<span id="cb7-30"><a href="#cb7-30" tabindex="-1"></a>           <span class="at">legend.only =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb7-31"><a href="#cb7-31" tabindex="-1"></a>           <span class="at">axis.args =</span> <span class="fu">list</span>(<span class="at">at =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">0.5</span>, <span class="dv">1</span>), </span>
-<span id="cb7-32"><a href="#cb7-32" tabindex="-1"></a>                            <span class="at">labels =</span> <span class="fu">round</span>(labels, <span class="dv">2</span>),</span>
-<span id="cb7-33"><a href="#cb7-33" tabindex="-1"></a>                            <span class="at">col.axis =</span> <span class="st">&quot;black&quot;</span>, <span class="at">fg =</span> <span class="cn">NA</span>,</span>
-<span id="cb7-34"><a href="#cb7-34" tabindex="-1"></a>                            <span class="at">cex.axis =</span> <span class="fl">0.9</span>, <span class="at">lwd.ticks =</span> <span class="dv">0</span>,</span>
-<span id="cb7-35"><a href="#cb7-35" tabindex="-1"></a>                            <span class="at">line =</span> <span class="sc">-</span><span class="fl">0.5</span>))</span></code></pre></div>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a><span class="co"># add relative abundance</span></span>
+<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a><span class="fu">plot</span>(abd_breeding_laea,</span>
+<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a>     <span class="at">breaks =</span> breaks, <span class="at">col =</span> pal, </span>
+<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a>     <span class="at">maxcell =</span> <span class="fu">ncell</span>(abd_breeding_laea),</span>
+<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a>     <span class="at">legend =</span> <span class="cn">FALSE</span>, <span class="at">add =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a><span class="co"># add boundaries</span></span>
+<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a><span class="fu">lines</span>(<span class="fu">vect</span>(countries), <span class="at">col =</span> <span class="st">&quot;#ffffff&quot;</span>, <span class="at">lwd =</span> <span class="dv">3</span>)</span>
+<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a><span class="fu">lines</span>(<span class="fu">vect</span>(states), <span class="at">col =</span>  <span class="st">&quot;#ffffff&quot;</span>, <span class="at">lwd =</span> <span class="fl">1.5</span>, <span class="at">xpd =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a><span class="fu">lines</span>(<span class="fu">vect</span>(region_boundary_laea), <span class="at">col =</span> <span class="st">&quot;#ffffff&quot;</span>, <span class="at">lwd =</span> <span class="dv">3</span>, <span class="at">xpd =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a></span>
+<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a><span class="co"># add legend using the fields package</span></span>
+<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a><span class="co"># label the bottom, middle, and top</span></span>
+<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a>labels <span class="ot">&lt;-</span> <span class="fu">quantile</span>(breaks, <span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">0.5</span>, <span class="dv">1</span>))</span>
+<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a>label_breaks <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="at">length.out =</span> <span class="fu">length</span>(breaks))</span>
+<span id="cb7-30"><a href="#cb7-30" tabindex="-1"></a><span class="fu">image.plot</span>(<span class="at">zlim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>), <span class="at">breaks =</span> label_breaks, <span class="at">col =</span> pal,</span>
+<span id="cb7-31"><a href="#cb7-31" tabindex="-1"></a>           <span class="at">smallplot =</span> <span class="fu">c</span>(<span class="fl">0.90</span>, <span class="fl">0.93</span>, <span class="fl">0.15</span>, <span class="fl">0.85</span>),</span>
+<span id="cb7-32"><a href="#cb7-32" tabindex="-1"></a>           <span class="at">legend.only =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb7-33"><a href="#cb7-33" tabindex="-1"></a>           <span class="at">axis.args =</span> <span class="fu">list</span>(<span class="at">at =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">0.5</span>, <span class="dv">1</span>), </span>
+<span id="cb7-34"><a href="#cb7-34" tabindex="-1"></a>                            <span class="at">labels =</span> <span class="fu">round</span>(labels, <span class="dv">2</span>),</span>
+<span id="cb7-35"><a href="#cb7-35" tabindex="-1"></a>                            <span class="at">col.axis =</span> <span class="st">&quot;black&quot;</span>, <span class="at">fg =</span> <span class="cn">NA</span>,</span>
+<span id="cb7-36"><a href="#cb7-36" tabindex="-1"></a>                            <span class="at">cex.axis =</span> <span class="fl">0.9</span>, <span class="at">lwd.ticks =</span> <span class="dv">0</span>,</span>
+<span id="cb7-37"><a href="#cb7-37" tabindex="-1"></a>                            <span class="at">line =</span> <span class="sc">-</span><span class="fl">0.5</span>))</span></code></pre></div>
 </div>
 </div>
-<div id="trajectories" class="section level1">
-<h1>Extracting trajectories with uncertainty</h1>
-<p>Next, we’ll look at the temporal component of the relative abundance
-data. Using the weekly relative abundance cubes, we can chart the change
-in relative abundance throughout the year for a fixed location.
-Furthermore, using the upper and lower confidence interval rasters, we
-can add uncertainty estimates. We often refer to these as relative
-abundance trajectories.</p>
-<p>Let’s start by loading all the necessary relative abundance
-cubes.</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>abd_median <span class="ot">&lt;-</span> <span class="fu">load_raster</span>(<span class="st">&quot;yebsap-example&quot;</span>, <span class="at">product =</span> <span class="st">&quot;abundance&quot;</span>, </span>
-<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>                          <span class="at">metric =</span> <span class="st">&quot;median&quot;</span>, <span class="at">resolution =</span> <span class="st">&quot;27km&quot;</span>)</span>
-<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>abd_lower <span class="ot">&lt;-</span> <span class="fu">load_raster</span>(<span class="st">&quot;yebsap-example&quot;</span>, <span class="at">product =</span> <span class="st">&quot;abundance&quot;</span>,</span>
-<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>                         <span class="at">metric =</span> <span class="st">&quot;lower&quot;</span>, <span class="at">resolution =</span> <span class="st">&quot;27km&quot;</span>)</span>
-<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>abd_upper <span class="ot">&lt;-</span> <span class="fu">load_raster</span>(<span class="st">&quot;yebsap-example&quot;</span>, <span class="at">product =</span> <span class="st">&quot;abundance&quot;</span>, </span>
-<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>                         <span class="at">metric =</span> <span class="st">&quot;upper&quot;</span>, <span class="at">resolution =</span> <span class="st">&quot;27km&quot;</span>)</span></code></pre></div>
-<p>Now we’ll extract the values for a fixed location.</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="co"># set a point</span></span>
-<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>pt <span class="ot">&lt;-</span> <span class="fu">st_point</span>(<span class="fu">c</span>(<span class="sc">-</span><span class="fl">88.1</span>, <span class="fl">46.7</span>)) <span class="sc">%&gt;%</span> </span>
-<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>  <span class="fu">st_sfc</span>(<span class="at">crs =</span> <span class="dv">4326</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>  <span class="fu">st_transform</span>(<span class="at">crs =</span> <span class="fu">st_crs</span>(abd_median)) <span class="sc">%&gt;%</span> </span>
-<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>  <span class="fu">st_coordinates</span>()</span>
-<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a></span>
-<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a><span class="co"># extract</span></span>
-<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>traj_median <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(<span class="fu">extract</span>(abd_median, pt))[<span class="dv">1</span>, ]</span>
-<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a>traj_upper <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(<span class="fu">extract</span>(abd_upper, pt))[<span class="dv">1</span>, ]</span>
-<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a>traj_lower <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(<span class="fu">extract</span>(abd_lower, pt))[<span class="dv">1</span>, ]</span>
-<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a></span>
-<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a><span class="co"># plot trajectories</span></span>
-<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a>plot_frame <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">x =</span> <span class="fu">seq_len</span>(<span class="fu">length</span>(traj_median)),</span>
-<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a>                         <span class="at">y =</span> <span class="fu">unname</span>(traj_median),</span>
-<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a>                         <span class="at">lower =</span> <span class="fu">unname</span>(traj_lower),</span>
-<span id="cb9-16"><a href="#cb9-16" tabindex="-1"></a>                         <span class="at">upper =</span> <span class="fu">unname</span>(traj_upper))</span>
-<span id="cb9-17"><a href="#cb9-17" tabindex="-1"></a><span class="fu">ggplot</span>(plot_frame, <span class="fu">aes</span>(x, y)) <span class="sc">+</span></span>
-<span id="cb9-18"><a href="#cb9-18" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">data =</span> plot_frame) <span class="sc">+</span></span>
-<span id="cb9-19"><a href="#cb9-19" tabindex="-1"></a>  <span class="fu">geom_ribbon</span>(<span class="at">data =</span> plot_frame, </span>
-<span id="cb9-20"><a href="#cb9-20" tabindex="-1"></a>              <span class="fu">aes</span>(<span class="at">ymin =</span> lower, <span class="at">ymax =</span> upper), </span>
-<span id="cb9-21"><a href="#cb9-21" tabindex="-1"></a>              <span class="at">alpha =</span> <span class="fl">0.3</span>) <span class="sc">+</span></span>
-<span id="cb9-22"><a href="#cb9-22" tabindex="-1"></a>  <span class="fu">ylab</span>(<span class="st">&quot;Relative abundance&quot;</span>) <span class="sc">+</span></span>
-<span id="cb9-23"><a href="#cb9-23" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">&quot;Week&quot;</span>) <span class="sc">+</span></span>
-<span id="cb9-24"><a href="#cb9-24" tabindex="-1"></a>  <span class="fu">theme_light</span>()</span></code></pre></div>
+<div id="chron" class="section level1">
+<h1>Migration chronologies</h1>
+<p>In this application we’ll use the weekly estimates to chart the
+change in relative abundance throughout the year for a given region.
+We’ll start by generating a trajectory with confidence intervals for a
+single species, then demonstrate how to produce multi-species
+trajectories. For these examples, we’ll consider shorebirds in Kansas (a
+state in center of the United States). To start we’ll load a polygon for
+the boundary of Kansas.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>region_boundary <span class="ot">&lt;-</span> <span class="fu">ne_states</span>(<span class="at">iso_a2 =</span> <span class="st">&quot;US&quot;</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>  <span class="fu">filter</span>(name <span class="sc">==</span> <span class="st">&quot;Kansas&quot;</span>)</span></code></pre></div>
+<div id="chron-single" class="section level2">
+<h2>Single species with uncertainty</h2>
+<p>For the single species example, let’s chart a migration chronology
+for <a href="https://ebird.org/species/snoplo5">Snowy Plover</a> in
+Kansas. First we need to download and load the relevant eBird Status
+Data Products for this species: the weekly median relative abundance and
+the upper and lower confidence intervals of weekly relative
+abundance.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="co"># download data if they haven&#39;t already been downloaded</span></span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="fu">ebirdst_download_status</span>(<span class="st">&quot;Snowy Plover&quot;</span>, </span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>                        <span class="at">pattern =</span> <span class="st">&quot;abundance_(median|upper|lower)_3km&quot;</span>)</span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a><span class="co"># load raster data</span></span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>abd_median <span class="ot">&lt;-</span> <span class="fu">load_raster</span>(<span class="st">&quot;snoplo5&quot;</span>, <span class="at">product =</span> <span class="st">&quot;abundance&quot;</span>, <span class="at">metric =</span> <span class="st">&quot;median&quot;</span>)</span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a>abd_lower <span class="ot">&lt;-</span> <span class="fu">load_raster</span>(<span class="st">&quot;snoplo5&quot;</span>, <span class="at">product =</span> <span class="st">&quot;abundance&quot;</span>, <span class="at">metric =</span> <span class="st">&quot;lower&quot;</span>)</span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>abd_upper <span class="ot">&lt;-</span> <span class="fu">load_raster</span>(<span class="st">&quot;snoplo5&quot;</span>, <span class="at">product =</span> <span class="st">&quot;abundance&quot;</span>, <span class="at">metric =</span> <span class="st">&quot;upper&quot;</span>)</span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a></span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a><span class="co"># project region boundary to match raster data</span></span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a>region_boundary_proj <span class="ot">&lt;-</span> <span class="fu">st_transform</span>(region_boundary, <span class="fu">st_crs</span>(abd_median))</span></code></pre></div>
+<p>Now we can calculate the mean relative abundance with confidence
+intervals for each week of the year within Kansas.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="co"># extract values within region and calculate the mean</span></span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>abd_median_region <span class="ot">&lt;-</span> <span class="fu">extract</span>(abd_median, region_boundary_proj,</span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>                             <span class="at">fun =</span> <span class="st">&quot;mean&quot;</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>, <span class="at">ID =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>abd_lower_region <span class="ot">&lt;-</span> <span class="fu">extract</span>(abd_lower, region_boundary_proj,</span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a>                            <span class="at">fun =</span> <span class="st">&quot;mean&quot;</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>, <span class="at">ID =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a>abd_upper_region <span class="ot">&lt;-</span> <span class="fu">extract</span>(abd_upper, region_boundary_proj,</span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a>                            <span class="at">fun =</span> <span class="st">&quot;mean&quot;</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>, <span class="at">ID =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a></span>
+<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a><span class="co"># transform to data frame format</span></span>
+<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a>abd_median_region <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">week =</span> <span class="fu">as.Date</span>(<span class="fu">names</span>(abd_median_region)),</span>
+<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a>                                <span class="at">median =</span> <span class="fu">as.numeric</span>(abd_median_region[<span class="dv">1</span>, ]))</span>
+<span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a>abd_lower_region <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">week =</span> <span class="fu">as.Date</span>(<span class="fu">names</span>(abd_lower_region)),</span>
+<span id="cb10-13"><a href="#cb10-13" tabindex="-1"></a>                               <span class="at">lower =</span> <span class="fu">as.numeric</span>(abd_lower_region[<span class="dv">1</span>, ]))</span>
+<span id="cb10-14"><a href="#cb10-14" tabindex="-1"></a>abd_upper_region <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">week =</span> <span class="fu">as.Date</span>(<span class="fu">names</span>(abd_upper_region)),</span>
+<span id="cb10-15"><a href="#cb10-15" tabindex="-1"></a>                               <span class="at">upper =</span> <span class="fu">as.numeric</span>(abd_upper_region[<span class="dv">1</span>, ]))</span>
+<span id="cb10-16"><a href="#cb10-16" tabindex="-1"></a></span>
+<span id="cb10-17"><a href="#cb10-17" tabindex="-1"></a><span class="co"># combine median and confidence intervals</span></span>
+<span id="cb10-18"><a href="#cb10-18" tabindex="-1"></a>chronology <span class="ot">&lt;-</span> abd_median_region <span class="sc">|&gt;</span> </span>
+<span id="cb10-19"><a href="#cb10-19" tabindex="-1"></a>  <span class="fu">inner_join</span>(abd_lower_region, <span class="at">by =</span> <span class="st">&quot;week&quot;</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb10-20"><a href="#cb10-20" tabindex="-1"></a>  <span class="fu">inner_join</span>(abd_upper_region, <span class="at">by =</span> <span class="st">&quot;week&quot;</span>)</span></code></pre></div>
+<p>Finally, let’s use this data frame to generate a migration chronology
+for this species.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="fu">ggplot</span>(chronology) <span class="sc">+</span></span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>  <span class="fu">aes</span>(<span class="at">x =</span> week, <span class="at">y =</span> median) <span class="sc">+</span></span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>  <span class="fu">geom_ribbon</span>(<span class="fu">aes</span>(<span class="at">ymin =</span> lower, <span class="at">ymax =</span> upper), <span class="at">alpha =</span> <span class="fl">0.2</span>) <span class="sc">+</span></span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a>  <span class="fu">scale_x_date</span>(<span class="at">date_labels =</span> <span class="st">&quot;%b&quot;</span>, <span class="at">date_breaks =</span> <span class="st">&quot;1 month&quot;</span>) <span class="sc">+</span></span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">&quot;Week&quot;</span>, </span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">&quot;Mean relative abundance in Kansas&quot;</span>,</span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">&quot;Migration chronology for Snowy Plover in Kansas&quot;</span>)</span></code></pre></div>
+</div>
+<div id="chron-multi" class="section level2">
+<h2>Multi-species</h2>
+<p>Migration chronologies can also be overlaid for multiple species,
+allowing for comparison of migration timing between species. However,
+comparing eBird Status Data Products across species requires extra
+caution because the models give <em>relative</em> rather than absolute
+abundance. For example, species differ in their detectability, and this
+may cause differences in relative abundance. To address this, we’ll use
+the proportion of population layers, which give the proportion of the
+total range-wide relative abundance falling within each cell. These
+proportion of population layers help to control for difference in
+detectability, allowing us to compare multiple species</p>
+<p>Following a similar approach to that used for the single species
+chronology above, we’ll estimate migration chronologies for a suite of
+shorebird species in Kansas. However, in this example we’ll estiate the
+proportion of population falling within Kansas rather than the mean
+abundance.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>species <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;American Avocet&quot;</span>, <span class="st">&quot;Snowy Plover&quot;</span>, <span class="st">&quot;Hudsonian Godwit&quot;</span>, </span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>             <span class="st">&quot;Semipalmated Sandpiper&quot;</span>)</span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>chronologies <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a><span class="cf">for</span> (species <span class="cf">in</span> species) {</span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a>  <span class="co"># download propotion of population data</span></span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a>  <span class="fu">ebirdst_download_status</span>(species,</span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a>                          <span class="at">pattern =</span> <span class="st">&quot;proportion-population_median_3km&quot;</span>)</span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a>  </span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a>  <span class="co"># load raster data</span></span>
+<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a>  prop_pop <span class="ot">&lt;-</span> <span class="fu">load_raster</span>(species, <span class="at">product =</span> <span class="st">&quot;proportion-population&quot;</span>)</span>
+<span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a>  </span>
+<span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a>  <span class="co"># estimate proportion of population within the region</span></span>
+<span id="cb12-14"><a href="#cb12-14" tabindex="-1"></a>  prop_pop_region <span class="ot">&lt;-</span> <span class="fu">extract</span>(prop_pop, region_boundary_proj,</span>
+<span id="cb12-15"><a href="#cb12-15" tabindex="-1"></a>                             <span class="at">fun =</span> <span class="st">&quot;sum&quot;</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>, <span class="at">ID =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb12-16"><a href="#cb12-16" tabindex="-1"></a>  prop_pop_region <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">species =</span> species,</span>
+<span id="cb12-17"><a href="#cb12-17" tabindex="-1"></a>                                <span class="at">week =</span> <span class="fu">as.Date</span>(<span class="fu">names</span>(prop_pop_region)),</span>
+<span id="cb12-18"><a href="#cb12-18" tabindex="-1"></a>                                <span class="at">median =</span> <span class="fu">as.numeric</span>(prop_pop_region[<span class="dv">1</span>, ]))</span>
+<span id="cb12-19"><a href="#cb12-19" tabindex="-1"></a>  </span>
+<span id="cb12-20"><a href="#cb12-20" tabindex="-1"></a>  <span class="co"># combine with other species</span></span>
+<span id="cb12-21"><a href="#cb12-21" tabindex="-1"></a>  chronologies <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(chronologies, prop_pop_region)</span>
+<span id="cb12-22"><a href="#cb12-22" tabindex="-1"></a>}</span></code></pre></div>
+<p>Finally, we can use this data frame to generate migration
+chronologies for these species.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="fu">ggplot</span>(chronologies) <span class="sc">+</span></span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a>  <span class="fu">aes</span>(<span class="at">x =</span> week, <span class="at">y =</span> median, <span class="at">color =</span> species) <span class="sc">+</span></span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">linewidth =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a>  <span class="fu">scale_x_date</span>(<span class="at">date_labels =</span> <span class="st">&quot;%b&quot;</span>, <span class="at">date_breaks =</span> <span class="st">&quot;1 month&quot;</span>) <span class="sc">+</span></span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">label_percent</span>()) <span class="sc">+</span></span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a>  <span class="fu">scale_color_brewer</span>(<span class="at">palette =</span> <span class="st">&quot;Set1&quot;</span>) <span class="sc">+</span></span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="cn">NULL</span>, </span>
+<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">&quot;Percent of population in Kansas&quot;</span>,</span>
+<span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">&quot;Migration chronologies for shorebirds in Kansas&quot;</span>) <span class="sc">+</span></span>
+<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">&quot;bottom&quot;</span>)</span></code></pre></div>
+<p>A variety of patterns are revealed in this migration chronology.
+Semipalmated Sandpiper and Hudsonian Godwit pass through the region
+during pre-breeding migration, presumably on their way to breed further
+north, but don’t appear to take the same route on the post-breeding
+migration. Snowy Plover occurs in the region for much of the year, but
+with spikes for the pre- and post-breeding migration. Finally, American
+Avocet also occurs in the region for much of the year, but without the
+strong peaks during migration.</p>
+</div>
 </div>
 <div id="stats" class="section level1">
 <h1>Regional statistics</h1>
-<p>In addition to maps and visualizations, the eBird Status and Trends
-website provides a set of statistics summarizing the spatial data over
-regions (countries and states) and seasons. The five regional statistics
-are:</p>
-<ol style="list-style-type: decimal">
-<li><strong>Mean relative abundance:</strong> the average estimated
-relative abundance within the given region.</li>
-<li><strong>Proportion of seasonal population:</strong> the sum of the
-estimated relative abundance within the selected region divided by the
-sum of the estimated relative abundance across the full range.</li>
-<li><strong>Proportion of region occupied:</strong> the proportion of
-the selected region within the range boundary of a species.</li>
-<li><strong>Proportion of range in region:</strong> the proportion of a
-species’ total range that falls within the selected region.</li>
-<li><strong>Days of occupation in region:</strong> the number of days
-that a species occupies the selected region, with occupation being
-defined as spatially covering the selected region by at least 5% based
-on estimated relative abundances averaged across the given season.</li>
-</ol>
-<p>These statistics can be downloaded from the Status and Trends website
-for all regions and seasons for any given species; however, there may be
-situations where you want to calculate them over different regions than
-those provided. With that in mind, in this section we’ll cover how to
-calculate a couple of these statistics: percent of population in region
-and percent of region occupied. The remaining 3 statistics can be
-calculated following the same approach with some modifications.</p>
-<p>Since the example data used in this vignette is restricted to
-Michigan, we’ll calculate the statistics over the counties in Michigan;
-however, this approach can easily be extended to any set of regions.
-Let’s start by downloading county boundaries for Michigan.</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>mi_counties <span class="ot">&lt;-</span> <span class="fu">gadm</span>(<span class="at">country =</span> <span class="st">&quot;USA&quot;</span>, <span class="at">level =</span> <span class="dv">2</span>, <span class="at">path =</span> <span class="fu">tempdir</span>()) <span class="sc">%&gt;%</span> </span>
-<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>  <span class="fu">st_as_sf</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>  <span class="fu">filter</span>(NAME_1 <span class="sc">==</span> <span class="st">&quot;Michigan&quot;</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>  <span class="fu">select</span>(<span class="at">county =</span> NAME_2, <span class="at">county_code =</span> HASC_2) <span class="sc">%&gt;%</span> </span>
-<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a>  <span class="co"># remove lakes which aren&#39;t true counties</span></span>
-<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a>  <span class="fu">filter</span>(county_code <span class="sc">!=</span> <span class="st">&quot;US.MI.WB&quot;</span>)</span>
-<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a><span class="co"># project to sinusoidal</span></span>
-<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a>mi_counties_proj <span class="ot">&lt;-</span> <span class="fu">st_transform</span>(mi_counties, <span class="at">crs =</span> <span class="fu">st_crs</span>(abd_median))</span></code></pre></div>
-<p>We’ll need the seasonal proportion of population cubes and the
-seasonal ranges for these calculations.</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a>pop_seasonal <span class="ot">&lt;-</span> <span class="fu">load_raster</span>(<span class="st">&quot;yebsap-example&quot;</span>, <span class="at">product =</span> <span class="st">&quot;proportion-population&quot;</span>, </span>
-<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>                            <span class="at">period =</span> <span class="st">&quot;seasonal&quot;</span>, <span class="at">resolution =</span> <span class="st">&quot;27km&quot;</span>)</span>
-<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>ranges <span class="ot">&lt;-</span> <span class="fu">load_ranges</span>(<span class="st">&quot;yebsap-example&quot;</span>, <span class="at">resolution =</span> <span class="st">&quot;27km&quot;</span>, <span class="at">smoothed =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
-<div id="proportion-of-population" class="section level2">
-<h2>Proportion of population</h2>
-<p>Percent of population in regions is one of the simplest statistics to
-calculate since a raster of percent of population is already provided;
-we simply sum all the raster cells within each region polygon.</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>prop_pop <span class="ot">&lt;-</span> <span class="fu">extract</span>(pop_seasonal, mi_counties_proj, <span class="at">fun =</span> sum, <span class="at">na.rm =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>  <span class="co"># attach county attributes</span></span>
-<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">county_code =</span> mi_counties<span class="sc">$</span>county_code) <span class="sc">%&gt;%</span> </span>
-<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>  <span class="co"># transpose to long format, one season per row</span></span>
-<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>ID) <span class="sc">%&gt;%</span> </span>
-<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="sc">-</span>county_code, </span>
-<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a>               <span class="at">names_to =</span> <span class="st">&quot;season&quot;</span>,</span>
-<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a>               <span class="at">values_to =</span> <span class="st">&quot;proportion_population&quot;</span>)</span>
-<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a><span class="fu">head</span>(prop_pop)</span></code></pre></div>
-<p>Let’s make a quick map comparing the breeding and non-breeding
-proportion of population within counties in Michigan.</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="co"># join back to county boundaries</span></span>
-<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a>prop_pop_proj <span class="ot">&lt;-</span> prop_pop <span class="sc">%&gt;%</span> </span>
-<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a>  <span class="fu">filter</span>(season <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;breeding&quot;</span>, <span class="st">&quot;nonbreeding&quot;</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a>  <span class="fu">inner_join</span>(mi_counties, ., <span class="at">by =</span> <span class="st">&quot;county_code&quot;</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a>  <span class="co"># transform to custom projection for plotting</span></span>
-<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a>  <span class="fu">st_transform</span>(<span class="at">crs =</span> crs)</span>
-<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a></span>
-<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a><span class="co"># plot</span></span>
-<span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a><span class="fu">ggplot</span>(prop_pop_proj) <span class="sc">+</span></span>
-<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="fu">aes</span>(<span class="at">fill =</span> proportion_population)) <span class="sc">+</span></span>
-<span id="cb13-11"><a href="#cb13-11" tabindex="-1"></a>  <span class="fu">scale_fill_viridis_c</span>(<span class="at">trans =</span> <span class="st">&quot;sqrt&quot;</span>) <span class="sc">+</span></span>
-<span id="cb13-12"><a href="#cb13-12" tabindex="-1"></a>  <span class="fu">guides</span>(<span class="at">fill =</span> <span class="fu">guide_colorbar</span>(<span class="at">title.position =</span> <span class="st">&quot;top&quot;</span>, <span class="at">barwidth =</span> <span class="dv">15</span>)) <span class="sc">+</span></span>
-<span id="cb13-13"><a href="#cb13-13" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span> season, <span class="at">ncol =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
-<span id="cb13-14"><a href="#cb13-14" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">&quot;Seasonal proportion of population in MI counties&quot;</span>,</span>
-<span id="cb13-15"><a href="#cb13-15" tabindex="-1"></a>       <span class="at">fill =</span> <span class="st">&quot;Proportion of population&quot;</span>) <span class="sc">+</span></span>
-<span id="cb13-16"><a href="#cb13-16" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
-<span id="cb13-17"><a href="#cb13-17" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">&quot;bottom&quot;</span>)</span></code></pre></div>
+<p>The eBird Status and Trends website provides regional summary
+statistics at the country and state/province level for each species. For
+example, we can use the regional stats to see that <a href="https://science.ebird.org/en/status-and-trends/species/goleag/abundance-map?regionCode=USA">33%
+of the non-breeding population of Golen Eagle falls within the United
+States</a>. The website also allows users to draw their own customs
+polygons to get summary statistics. within these polygons. However,
+there are cases where you may want to estimate regional summary
+statistics in a way that isn’t supported by the website. Here we’ll
+provide a few examples for calculating the proportion of population
+within a region. We’ll use Golden Eagle for these examples.</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a><span class="fu">ebirdst_download_status</span>(<span class="st">&quot;Golden Eagle&quot;</span>)</span></code></pre></div>
+<div id="stats-seasonal" class="section level2">
+<h2>Proportion of seasonal population</h2>
+<p>For this example, we’ll estimate the seasonal proportion of the
+population of Golden Eagle within each state in the United States. Note
+that Golden Eagles are distributed throughout the Northern Hemisphere,
+in North America, Asia, and Europe. In this example, we’ll be estimating
+the proportion of the global population, in the <a href="#stats-regional">next example</a> we’ll estimate the proportion of
+the North American population.</p>
+<p>To start, we’ll load the seasonal proportion of population raster
+layers and polygons defining each state. If you have a Shapefile or
+GeoPackage defining your region of interest (e.g., for a protected area
+or Bird Conservation Region), you could load it here using the
+<code>read_sf()</code> function.</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="co"># seasonal proportion of population</span></span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a>prop_pop_seasonal <span class="ot">&lt;-</span> <span class="fu">load_raster</span>(<span class="st">&quot;goleag&quot;</span>, </span>
+<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a>                                 <span class="at">product =</span> <span class="st">&quot;proportion-population&quot;</span>,</span>
+<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a>                                 <span class="at">period =</span> <span class="st">&quot;seasonal&quot;</span>)</span>
+<span id="cb15-5"><a href="#cb15-5" tabindex="-1"></a></span>
+<span id="cb15-6"><a href="#cb15-6" tabindex="-1"></a><span class="co"># state boundaries, excluding hawaii</span></span>
+<span id="cb15-7"><a href="#cb15-7" tabindex="-1"></a>states <span class="ot">&lt;-</span> <span class="fu">ne_states</span>(<span class="at">iso_a2 =</span> <span class="st">&quot;US&quot;</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb15-8"><a href="#cb15-8" tabindex="-1"></a>  <span class="fu">filter</span>(name <span class="sc">!=</span> <span class="st">&quot;Hawaii&quot;</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb15-9"><a href="#cb15-9" tabindex="-1"></a>  <span class="fu">select</span>(<span class="at">state =</span> name) <span class="sc">|&gt;</span> </span>
+<span id="cb15-10"><a href="#cb15-10" tabindex="-1"></a>  <span class="co"># transform to match projection of raster data</span></span>
+<span id="cb15-11"><a href="#cb15-11" tabindex="-1"></a>  <span class="fu">st_transform</span>(<span class="at">crs =</span> <span class="fu">st_crs</span>(prop_pop_seasonal))</span></code></pre></div>
+<p>Now we can use the <code>extract()</code> function from
+<code>terra</code> to calculate the proportion of the population within
+each state for each season. Setting <code>weights = TRUE</code> triggers
+<code>extract()</code> to calculate a weighted sum to account to adjust
+for partial coverage of raster cells by the region polygons. In this
+example, the <code>weights</code> argument has little impact, but it can
+play a more important role for smaller regions.</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a>state_prop_pop <span class="ot">&lt;-</span> <span class="fu">extract</span>(prop_pop_seasonal, states, </span>
+<span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a>                          <span class="at">fun =</span> <span class="st">&quot;sum&quot;</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>, <span class="at">weights =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb16-3"><a href="#cb16-3" tabindex="-1"></a>                          <span class="at">bind =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb16-4"><a href="#cb16-4" tabindex="-1"></a>  <span class="fu">as.data.frame</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb16-5"><a href="#cb16-5" tabindex="-1"></a>  <span class="co"># sort in descending order or breeding proportion of population</span></span>
+<span id="cb16-6"><a href="#cb16-6" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(breeding))</span>
+<span id="cb16-7"><a href="#cb16-7" tabindex="-1"></a><span class="fu">head</span>(state_prop_pop)</span></code></pre></div>
 </div>
-<div id="proportion-of-region-occupied" class="section level2">
-<h2>Proportion of region occupied</h2>
-<p>To calculate range-based stats it’s often easiest to use the range
-polygons rather than the raster data. We can calculate the area of each
-county, then calculate the area of intersection between the counties and
-the ranges, and finally divide the two to get the proportion of each
-region occupied.</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a><span class="co"># add the area of each region</span></span>
-<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a>mi_counties<span class="sc">$</span>area <span class="ot">&lt;-</span> <span class="fu">st_area</span>(mi_counties)</span>
-<span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a><span class="co"># for each season, intersect with the county boundaries and calculate area</span></span>
-<span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a>range_pct_occupied <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
-<span id="cb14-5"><a href="#cb14-5" tabindex="-1"></a><span class="cf">for</span> (s <span class="cf">in</span> ranges<span class="sc">$</span>season) {</span>
-<span id="cb14-6"><a href="#cb14-6" tabindex="-1"></a>  range_pct_occupied <span class="ot">&lt;-</span> ranges <span class="sc">%&gt;%</span> </span>
-<span id="cb14-7"><a href="#cb14-7" tabindex="-1"></a>    <span class="fu">filter</span>(season <span class="sc">==</span> s) <span class="sc">%&gt;%</span> </span>
-<span id="cb14-8"><a href="#cb14-8" tabindex="-1"></a>    <span class="fu">st_intersection</span>(mi_counties, .) <span class="sc">%&gt;%</span> </span>
-<span id="cb14-9"><a href="#cb14-9" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">proportion_occupied =</span> <span class="fu">as.numeric</span>(<span class="fu">st_area</span>(.) <span class="sc">/</span> area)) <span class="sc">%&gt;%</span> </span>
-<span id="cb14-10"><a href="#cb14-10" tabindex="-1"></a>    <span class="fu">select</span>(season, county_code, proportion_occupied) <span class="sc">%&gt;%</span> </span>
-<span id="cb14-11"><a href="#cb14-11" tabindex="-1"></a>    <span class="fu">st_drop_geometry</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb14-12"><a href="#cb14-12" tabindex="-1"></a>    <span class="fu">bind_rows</span>(range_pct_occupied, .)</span>
-<span id="cb14-13"><a href="#cb14-13" tabindex="-1"></a>}</span>
-<span id="cb14-14"><a href="#cb14-14" tabindex="-1"></a><span class="fu">head</span>(range_pct_occupied)</span></code></pre></div>
+<div id="stats-relative" class="section level2">
+<h2>Proportion of North American population</h2>
+<p>For broadly distributed species, such as Golden Eagle, it may be
+desirable to estimate the proportion of the population relative to a
+subset of the full range. For example, let’s calculate the proportion of
+the North American population falling within each state, where we define
+North America to include the United States, Canada, and Mexico. We’ll
+start by creating a polygon for the boundary of North America, using
+this to mask the seasonal relative abundance raster, the dividing the
+masked relative abundance raster by the total relative abundance across
+all of North America to generate proportion of population layers.</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a><span class="co"># seasonal relative abundance</span></span>
+<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a>abd_seasonal <span class="ot">&lt;-</span> <span class="fu">load_raster</span>(<span class="st">&quot;goleag&quot;</span>, </span>
+<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a>                            <span class="at">product =</span> <span class="st">&quot;abundance&quot;</span>,</span>
+<span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a>                            <span class="at">period =</span> <span class="st">&quot;seasonal&quot;</span>)</span>
+<span id="cb17-5"><a href="#cb17-5" tabindex="-1"></a></span>
+<span id="cb17-6"><a href="#cb17-6" tabindex="-1"></a><span class="co"># load country polygon, union into a single polygon, and project</span></span>
+<span id="cb17-7"><a href="#cb17-7" tabindex="-1"></a>noram <span class="ot">&lt;-</span> <span class="fu">ne_countries</span>(<span class="at">country =</span> <span class="fu">c</span>(<span class="st">&quot;United States of America&quot;</span>, </span>
+<span id="cb17-8"><a href="#cb17-8" tabindex="-1"></a>                                  <span class="st">&quot;Canada&quot;</span>, <span class="st">&quot;Mexico&quot;</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb17-9"><a href="#cb17-9" tabindex="-1"></a>  <span class="fu">st_union</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb17-10"><a href="#cb17-10" tabindex="-1"></a>  <span class="fu">st_transform</span>(<span class="at">crs =</span> <span class="fu">st_crs</span>(abd_seasonal)) <span class="sc">|&gt;</span> </span>
+<span id="cb17-11"><a href="#cb17-11" tabindex="-1"></a>  <span class="co"># vect converts an sf object to terra format for mask()</span></span>
+<span id="cb17-12"><a href="#cb17-12" tabindex="-1"></a>  <span class="fu">vect</span>()</span>
+<span id="cb17-13"><a href="#cb17-13" tabindex="-1"></a></span>
+<span id="cb17-14"><a href="#cb17-14" tabindex="-1"></a><span class="co"># mask seasonal abundance</span></span>
+<span id="cb17-15"><a href="#cb17-15" tabindex="-1"></a>abd_seasonal_noram <span class="ot">&lt;-</span> <span class="fu">mask</span>(abd_seasonal, noram)</span>
+<span id="cb17-16"><a href="#cb17-16" tabindex="-1"></a></span>
+<span id="cb17-17"><a href="#cb17-17" tabindex="-1"></a><span class="co"># total north american relative abundance for each season</span></span>
+<span id="cb17-18"><a href="#cb17-18" tabindex="-1"></a>abd_noram_total <span class="ot">&lt;-</span> <span class="fu">global</span>(abd_seasonal_noram, <span class="at">fun =</span> <span class="st">&quot;sum&quot;</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb17-19"><a href="#cb17-19" tabindex="-1"></a></span>
+<span id="cb17-20"><a href="#cb17-20" tabindex="-1"></a><span class="co"># proportion of north american population</span></span>
+<span id="cb17-21"><a href="#cb17-21" tabindex="-1"></a>prop_pop_noram <span class="ot">&lt;-</span> abd_seasonal_noram <span class="sc">/</span> abd_noram_total<span class="sc">$</span>sum</span></code></pre></div>
+<p>Now we can calculate the proportion of population using exactly the
+same method as in the previous section.</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" tabindex="-1"></a>state_prop_noram_pop <span class="ot">&lt;-</span> <span class="fu">extract</span>(prop_pop_noram, states, </span>
+<span id="cb18-2"><a href="#cb18-2" tabindex="-1"></a>                                <span class="at">fun =</span> <span class="st">&quot;sum&quot;</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>, <span class="at">weights =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb18-3"><a href="#cb18-3" tabindex="-1"></a>                                <span class="at">bind =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb18-4"><a href="#cb18-4" tabindex="-1"></a>  <span class="fu">as.data.frame</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb18-5"><a href="#cb18-5" tabindex="-1"></a>  <span class="co"># sort in descending order or breeding proportion of population</span></span>
+<span id="cb18-6"><a href="#cb18-6" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(breeding))</span>
+<span id="cb18-7"><a href="#cb18-7" tabindex="-1"></a><span class="fu">head</span>(state_prop_noram_pop)</span></code></pre></div>
+<p>Notice that the proportions are higher than those in the previous
+section since we’re now estimating the proportion of the North American
+population rather than the proportion of the global population. For
+example, 6% of the global breeding season population occurs in Alaska,
+but this corresponds to 24% of the North American breeding season
+population.</p>
+</div>
+<div id="stats-custom" class="section level2">
+<h2>Regional stats for weeks and custom time periods</h2>
+<p>The eBird Status Data Products include seasonal raster layers that
+are derived from the weekly rasters based on expert defined seasons.
+These seasonal layers are convenient to work with, however, in some
+cases you may want to estimate the proportion of the population within a
+region at the weekly level or for a custom time period. For example,
+let’s estimate the proportion of the North American population within
+California by week and for the month of January.</p>
+<p>For this example, we’ll use the lower, 27 km resolution data in the
+interest of speed, since the 3 km weekly data can be quite slow to
+process. We’ll start by estimating the weekly proportion of the North
+American population following an approach similar to that in the
+previous section.</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" tabindex="-1"></a><span class="co"># weekly relative abundance, masked to north america</span></span>
+<span id="cb19-2"><a href="#cb19-2" tabindex="-1"></a>abd_weekly_noram <span class="ot">&lt;-</span> <span class="fu">load_raster</span>(<span class="st">&quot;goleag&quot;</span>, </span>
+<span id="cb19-3"><a href="#cb19-3" tabindex="-1"></a>                                <span class="at">product =</span> <span class="st">&quot;abundance&quot;</span>, </span>
+<span id="cb19-4"><a href="#cb19-4" tabindex="-1"></a>                                <span class="at">resolution =</span> <span class="st">&quot;27km&quot;</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb19-5"><a href="#cb19-5" tabindex="-1"></a>  <span class="fu">mask</span>(noram)</span>
+<span id="cb19-6"><a href="#cb19-6" tabindex="-1"></a></span>
+<span id="cb19-7"><a href="#cb19-7" tabindex="-1"></a><span class="co"># total north american relative abundance for each week</span></span>
+<span id="cb19-8"><a href="#cb19-8" tabindex="-1"></a>abd_weekly_total <span class="ot">&lt;-</span> <span class="fu">global</span>(abd_weekly_noram, <span class="at">fun =</span> <span class="st">&quot;sum&quot;</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb19-9"><a href="#cb19-9" tabindex="-1"></a></span>
+<span id="cb19-10"><a href="#cb19-10" tabindex="-1"></a><span class="co"># proportion of north american population</span></span>
+<span id="cb19-11"><a href="#cb19-11" tabindex="-1"></a>prop_pop_weekly_noram <span class="ot">&lt;-</span> abd_weekly_noram <span class="sc">/</span> abd_weekly_total<span class="sc">$</span>sum</span>
+<span id="cb19-12"><a href="#cb19-12" tabindex="-1"></a></span>
+<span id="cb19-13"><a href="#cb19-13" tabindex="-1"></a><span class="co"># proportion of weekly population in california</span></span>
+<span id="cb19-14"><a href="#cb19-14" tabindex="-1"></a>california <span class="ot">&lt;-</span> <span class="fu">filter</span>(states, state <span class="sc">==</span> <span class="st">&quot;California&quot;</span>)</span>
+<span id="cb19-15"><a href="#cb19-15" tabindex="-1"></a>cali_prop_noram_pop <span class="ot">&lt;-</span> <span class="fu">extract</span>(prop_pop_weekly_noram, california, </span>
+<span id="cb19-16"><a href="#cb19-16" tabindex="-1"></a>                               <span class="at">fun =</span> <span class="st">&quot;sum&quot;</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>, </span>
+<span id="cb19-17"><a href="#cb19-17" tabindex="-1"></a>                               <span class="at">weights =</span> <span class="cn">TRUE</span>, <span class="at">ID =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb19-18"><a href="#cb19-18" tabindex="-1"></a>prop_pop_weekly_noram <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb19-19"><a href="#cb19-19" tabindex="-1"></a>  <span class="at">week =</span> <span class="fu">as.Date</span>(<span class="fu">names</span>(cali_prop_noram_pop)),</span>
+<span id="cb19-20"><a href="#cb19-20" tabindex="-1"></a>  <span class="at">prop_pop =</span> <span class="fu">as.numeric</span>(cali_prop_noram_pop[<span class="dv">1</span>, ]))</span>
+<span id="cb19-21"><a href="#cb19-21" tabindex="-1"></a><span class="fu">head</span>(prop_pop_weekly_noram)</span></code></pre></div>
+<p>This data frame gives the weekly proportion of the North American
+population of Golden Eagle in California; the structure is very similar
+to the data we generated in the <a href="#chron">migration
+chronology</a> section. We can take this one step further and average
+the proportion of population across the weeks in the month of
+January.</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" tabindex="-1"></a>prop_pop_weekly_noram <span class="sc">|&gt;</span> </span>
+<span id="cb20-2"><a href="#cb20-2" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">month</span>(week) <span class="sc">==</span> <span class="dv">1</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb20-3"><a href="#cb20-3" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">prop_pop =</span> <span class="fu">mean</span>(prop_pop))</span></code></pre></div>
+</div>
+<div id="stats-coastal" class="section level2">
+<h2>Coastal species</h2>
+<p>There is one particular case where the methods for estimate regional
+statistics presented so far can fail: species with a significant
+proportion of their population in offshore or tidal areas. Many regional
+polygons, including those from Natural Earth used so far, only capture
+the land area, resulting in a large proportion of non-zero relative
+abundance cells falling outside the polygons. For example, let’s
+estimate the proportion of the global non-breeding season population of
+<a href="https://ebird.org/species/sursco">Surf Scoter</a> in Mexico
+using the naive approach used in the previous examples.</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" tabindex="-1"></a><span class="co"># download only the season proportion of population layer</span></span>
+<span id="cb21-2"><a href="#cb21-2" tabindex="-1"></a><span class="fu">ebirdst_download_status</span>(<span class="st">&quot;Surf Scoter&quot;</span>, </span>
+<span id="cb21-3"><a href="#cb21-3" tabindex="-1"></a>                        <span class="at">pattern =</span> <span class="st">&quot;proportion-population_seasonal_mean_3km&quot;</span>)</span>
+<span id="cb21-4"><a href="#cb21-4" tabindex="-1"></a></span>
+<span id="cb21-5"><a href="#cb21-5" tabindex="-1"></a><span class="co"># breeding season proportion of population</span></span>
+<span id="cb21-6"><a href="#cb21-6" tabindex="-1"></a>abd_nonbreeding <span class="ot">&lt;-</span> <span class="fu">load_raster</span>(<span class="st">&quot;Surf Scoter&quot;</span>,</span>
+<span id="cb21-7"><a href="#cb21-7" tabindex="-1"></a>                               <span class="at">product =</span> <span class="st">&quot;proportion-population&quot;</span>,</span>
+<span id="cb21-8"><a href="#cb21-8" tabindex="-1"></a>                               <span class="at">period =</span> <span class="st">&quot;seasonal&quot;</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb21-9"><a href="#cb21-9" tabindex="-1"></a>  <span class="fu">subset</span>(<span class="st">&quot;nonbreeding&quot;</span>)</span>
+<span id="cb21-10"><a href="#cb21-10" tabindex="-1"></a></span>
+<span id="cb21-11"><a href="#cb21-11" tabindex="-1"></a><span class="co"># load a polygon for the boundary of Mexico</span></span>
+<span id="cb21-12"><a href="#cb21-12" tabindex="-1"></a>mexico <span class="ot">&lt;-</span> <span class="fu">ne_countries</span>(<span class="at">country =</span> <span class="st">&quot;Mexico&quot;</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb21-13"><a href="#cb21-13" tabindex="-1"></a>  <span class="fu">st_transform</span>(<span class="at">crs =</span> <span class="fu">st_crs</span>(abd_nonbreeding))</span>
+<span id="cb21-14"><a href="#cb21-14" tabindex="-1"></a></span>
+<span id="cb21-15"><a href="#cb21-15" tabindex="-1"></a><span class="co"># proportion in mexico</span></span>
+<span id="cb21-16"><a href="#cb21-16" tabindex="-1"></a><span class="fu">extract</span>(abd_nonbreeding, mexico, <span class="at">fun =</span> <span class="st">&quot;sum&quot;</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<p>According to this method, about 20% of the non-breeding population of
+Surf Scoter occurs in Mexico. However, Surf Scoter is an exclusively
+coastal species and this naive estimate is missing a large part of the
+population because the coarse boundary for Mexico we’re using doesn’t
+capture many of the 3 km raster cells that are falling offshore. We can
+correct for this by buffering the Mexico polygon by 5 km to try to
+capture these coastal cells. We’ll also use <code>touches = TRUE</code>
+to include raster cells that are touched by the Mexico polygon; without
+that argument, only cells whose centers fall within the Mexico polygon
+will be included.</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" tabindex="-1"></a><span class="co"># buffer by 5000m = 5km</span></span>
+<span id="cb22-2"><a href="#cb22-2" tabindex="-1"></a>mexico_buffer <span class="ot">&lt;-</span> <span class="fu">st_buffer</span>(mexico, <span class="at">dist =</span> <span class="dv">5000</span>)</span>
+<span id="cb22-3"><a href="#cb22-3" tabindex="-1"></a></span>
+<span id="cb22-4"><a href="#cb22-4" tabindex="-1"></a><span class="co"># proportion in mexico</span></span>
+<span id="cb22-5"><a href="#cb22-5" tabindex="-1"></a><span class="fu">extract</span>(abd_nonbreeding, mexico_buffer, <span class="at">fun =</span> <span class="st">&quot;sum&quot;</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb22-6"><a href="#cb22-6" tabindex="-1"></a>        <span class="at">touches =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<p>With these adjustments the proportion of the population has increased
+substantially from 20% to 33%. These approaches are not perfect and care
+should always be taken when working with eBird Status and Trends Data
+Products for coastal species.</p>
 </div>
 </div>
 
