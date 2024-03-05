@@ -138,7 +138,7 @@ load_raster <- function(species,
   }
 
   # full year products only available for migrants
-  if (p$is_resident && period == "full-year") {
+  if (p$summarize_as_resident && period == "full-year") {
     stop("Full-year products are not available for residents, use ",
          "period = 'seasonal' instead.")
   }
@@ -272,10 +272,6 @@ load_raster <- function(species,
 load_trends <- function(species,
                         fold_estimates = FALSE,
                         path = ebirdst_data_dir()) {
-  if (!requireNamespace("arrow", quietly = TRUE)) {
-    stop("Package 'arrow' must be installed to load eBird Trends",
-         "data with load_trends().")
-  }
   stopifnot(is.character(species), !is.na(species), dir.exists(path))
   stopifnot(is_flag(fold_estimates))
 

@@ -1,6 +1,6 @@
-ccc664db1f8660c5232064c41365d99c *DESCRIPTION
+f3f349d25ccf123d5d1e23817ec9d9cc *DESCRIPTION
 adeb7c38a9b05e2ff61860ab87d7e0d8 *NAMESPACE
-cb244f51bfaa9d554c3238d11dbf32d7 *NEWS.md
+df20d491ea75bd66d07734e5639b46ef *NEWS.md
 4ec47cc5e9e02f7cb9acee8b25f7e43a *R/access-key.R
 9405dcd8a9c84d0d278e58684a9a530a *R/data.R
 b061b70b1c902638b283034e863995f0 *R/download.R
@@ -8,7 +8,7 @@ bdbefaf1b8a322921270f43d7dd70b00 *R/ebirdst-defunct.R
 ce6c5b244c36f219c1393f02fd855aac *R/ebirdst-deprecated.R
 1c3b0304ecf6eb7bfe75d0a09299c380 *R/ebirdst-package.R
 c0cfd9c2643449b218fb554cb264bd09 *R/ebirdst-palettes.R
-746b95cd793121df7058096370cf1435 *R/load.R
+2de2f90d60c226fb9e2b0ae18c927db9 *R/load.R
 e866fc0bbc8072427b9b8f0ee64f771d *R/sample.R
 55571bd383b89bd73b6ef9d59ad22297 *R/trends.R
 65cef5e0674056f6fc07dd2b3ca85c13 *R/utils-pipe.R
@@ -17,11 +17,11 @@ c9825baeb2893bd0d2968aed5f41578c *R/zzz.R
 e77a5c1255bdf65b7aacbd1f9cdf1a3b *build/vignette.rds
 3ff48b0033fb023f9440061f52ceaf4c *data/ebirdst_predictor_descriptions.rda
 45df1e1c64e6c522776cb666d0c3b522 *data/ebirdst_predictors.rda
-27004050037f88384091dfe6dadf17a8 *data/ebirdst_runs.rda
+177149ec3cf9607cf500c2112e18f126 *data/ebirdst_runs.rda
 ec96f9268a62d46f54485fc1ff6a64d4 *inst/CITATION
 71339c671eb0320fc25ac354403b3948 *inst/doc/applications.R
-e662ea0de70a54fc12fc7cdc294a2d2b *inst/doc/applications.Rmd
-ee0101b4a87e95cd60581fb05a84ff8f *inst/doc/applications.html
+db5ad09ed8b590b7fda8a10c901f7e11 *inst/doc/applications.Rmd
+2ca9c1330f245eff1ebd76c842547d96 *inst/doc/applications.html
 9340123f40c3c5090a05001d9cc92328 *inst/doc/product-changelog.Rmd
 0d68c8bd51f45554d20b5699d67cfeb5 *inst/doc/product-changelog.html
 02a769fef19f2e29115195c6355a0f9f *inst/doc/status.R
@@ -37,7 +37,7 @@ ee465a685ee55220b669b6aab520337a *man/assign_to_grid.Rd
 f82f01d7d695e4ac0508c1b6ebbdaa37 *man/date_to_st_week.Rd
 38480aa229b18e726bbe65a4f426d879 *man/ebirdst-defunct.Rd
 38d750dd635c6014807f0f6376d2638c *man/ebirdst-deprecated.Rd
-f4186ae89fcc14b7944d9a62d866354a *man/ebirdst-package.Rd
+b9f96f0c17540c92d70c3f97963c4601 *man/ebirdst-package.Rd
 23a1c52aa3dc9bab014efaab5aafe5fb *man/ebirdst_data_dir.Rd
 03f321ee0231713f0436b4e8f6894d13 *man/ebirdst_download_status.Rd
 99f18b0892519768ca75f7122d9636d4 *man/ebirdst_download_trends.Rd
@@ -70,7 +70,7 @@ fbcbe61763323ed85a6be23d1319efdb *man/rasterize_trends.Rd
 0da56bf74148983e16ccaa1ee7ca795f *tests/testthat/test_rasters.R
 a9f2130449c3d98d84e81083b70637d0 *tests/testthat/test_trends.R
 506ba46e958c6ca7e0bbe3993a02f32b *tests/testthat/test_utils.R
-e662ea0de70a54fc12fc7cdc294a2d2b *vignettes/applications.Rmd
+db5ad09ed8b590b7fda8a10c901f7e11 *vignettes/applications.Rmd
 9340123f40c3c5090a05001d9cc92328 *vignettes/product-changelog.Rmd
 b85c84c5be56123e15062fae5953c5fd *vignettes/status.Rmd
 2882ad1236effc1ab0777cf2c5befcf8 *vignettes/trends.Rmd
