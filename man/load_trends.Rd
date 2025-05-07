@@ -31,7 +31,7 @@ The following columns are included:
 \item \code{species_code}: the alphanumeric eBird species code uniquely identifying
 the species.
 \item \code{season}:  season that the trend was estimated for: breeding,
-nonbreeding, or resident.
+non-breeding, or resident.
 \item \code{start_year/end_year}: the start and end years of the trend time period.
 \item \code{start_date/end_date}: the start and end dates (\code{MM-DD} format) of the
 season for which the trend was estimated.
@@ -58,7 +58,7 @@ returned with the following columns:
 \item \code{species_code}: the alphanumeric eBird species code uniquely identifying
 the species.
 \item \code{season}:  season that the trend was estimated for: breeding,
-nonbreeding, or resident.
+non-breeding, or resident.
 \item \code{srd_id}: unique integer identifier for the grid cell.
 \item \code{abd}: relative abundance estimate for the middle of the trend time
 period (e.g. 2014 for a 2007-2021 trend).
@@ -69,7 +69,7 @@ period (e.g. 2014 for a 2007-2021 trend).
 Load the relative abundance trend estimates for a single species or a set of
 species. Trends are estimated on a 27 km by 27 km grid for a single season
 per species (breeding, non-breeding, or resident).  Note that data must be
-download using \code{\link[=ebirdst_download_trends]{ebirdst_download_trends()}} prior to loading it using this
+downloaded using \code{\link[=ebirdst_download_trends]{ebirdst_download_trends()}} prior to loading it using this
 function.
 }
 \details{

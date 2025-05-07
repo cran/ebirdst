@@ -49,7 +49,7 @@ overflow: visible;
 </style>
 <style type="text/css" data-origin="pandoc">
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -60,7 +60,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
 { counter-reset: source-line 0; }
@@ -345,6 +345,11 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 width: 75%;
 }
 </style>
+<p><strong>Version Note:</strong> In 2025, the eBird Status Data
+Products were updated to the 2023 version year, however, none of the
+Trends data products were updated. Therefore the Trends Data Products
+currently available via <code>ebirdst</code> are for the 2022 prediction
+year.</p>
 <p>The eBird Trends Data Products provide estimates of trends in
 relative abundance based on eBird data. Trend estimates are made on a 27
 km by 27 km grid for a single season per species (breeding,
@@ -369,13 +374,13 @@ the data frame and only select those columns relevant to trends.</p>
 <span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="fu">library</span>(terra)</span>
 <span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a><span class="fu">library</span>(ebirdst)</span>
 <span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a></span>
-<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>trends_runs <span class="ot">&lt;-</span> ebirdst_runs <span class="sc">%&gt;%</span> </span>
-<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>  <span class="fu">filter</span>(has_trends) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>trends_runs <span class="ot">&lt;-</span> ebirdst_runs <span class="sc">|&gt;</span> </span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>  <span class="fu">filter</span>(has_trends) <span class="sc">|&gt;</span> </span>
 <span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a>  <span class="fu">select</span>(species_code, common_name,</span>
 <span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a>         trends_season, trends_region,</span>
 <span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a>         trends_start_year, trends_end_year,</span>
 <span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a>         trends_start_date, trends_end_date,</span>
-<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a>         rsquared, beta0)</span>
+<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a>         rsquared, beta0, trends_version_year)</span>
 <span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a><span class="fu">glimpse</span>(trends_runs)</span></code></pre></div>
 <p>Information is provided on the trends model for each species,
 including two predictive performance metrics (<code>rsquared</code> and
@@ -389,7 +394,7 @@ uniquely identifying the species.</li>
 <li><code>common_name</code>: the English common name of the
 species.</li>
 <li><code>trends_season</code>: season that the trend was estimated for:
-breeding, nonbreeding, or resident.</li>
+breeding, non-breeding, or resident.</li>
 <li><code>trends_region</code>: the geographic region that the trend
 model was run for. Note that broadly distributed species (e.g. Barn
 Swallow) will only have trend estimates for a regional subset of their
@@ -406,13 +411,15 @@ vs. estimated trends (<code>actual ~ estimated</code>) for the
 simulations. Positive values of <code>beta0</code> indicate that the
 models are systematically <em>underestimating</em> the simulated trend
 for this species.</li>
+<li><code>trends_version_year</code>: the version year for the trends
+data projects.</li>
 </ul>
 <p>Note that some season dates span two calendar years, for example
 Canvasback has 2011-2021 trends estimates for a non-breeding season
 defined as December 20 to January 25. In this case, the first season
 will be December 20, 2011 to January 25, 2012.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>trends_runs <span class="sc">%&gt;%</span> </span>
-<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>  <span class="fu">filter</span>(common_name <span class="sc">==</span> <span class="st">&quot;Canvasback&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>trends_runs <span class="sc">|&gt;</span> </span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>  <span class="fu">filter</span>(common_name <span class="sc">==</span> <span class="st">&quot;Canvasback&quot;</span>) <span class="sc">|&gt;</span> </span>
 <span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>  <span class="fu">select</span>(trends_start_year, trends_end_year, </span>
 <span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>         trends_start_date, trends_end_date)</span></code></pre></div>
 <div id="download" class="section level1">
@@ -450,8 +457,8 @@ period (e.g. 2014 for a 2007-2021 trend). The
 <code>start_year/end_year</code> and <code>start_date/end_date</code>
 columns provide redundant information to that available in
 <code>ebirdst_runs</code>. Specifically for Sage Thrasher we have:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>trends_runs <span class="sc">%&gt;%</span> </span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  <span class="fu">filter</span>(common_name <span class="sc">==</span> <span class="st">&quot;Sage Thrasher&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>trends_runs <span class="sc">|&gt;</span> </span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  <span class="fu">filter</span>(common_name <span class="sc">==</span> <span class="st">&quot;Sage Thrasher&quot;</span>) <span class="sc">|&gt;</span> </span>
 <span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  <span class="fu">select</span>(trends_start_year, trends_end_year,</span>
 <span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>         trends_start_date, trends_end_date)</span></code></pre></div>
 <p>This tells us that the trend estimates are for the breeding season
@@ -548,8 +555,8 @@ distinct estimates of the regional trend, then calculate the median and
 mean percent per year trends in relative abundance for Sage
 Thrasher.</p>
 <div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="co"># boundaries of states in the united states</span></span>
-<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>states <span class="ot">&lt;-</span> <span class="fu">ne_states</span>(<span class="at">iso_a2 =</span> <span class="st">&quot;US&quot;</span>, <span class="at">returnclass =</span> <span class="st">&quot;sf&quot;</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>  <span class="fu">filter</span>(iso_a2 <span class="sc">==</span> <span class="st">&quot;US&quot;</span>, <span class="sc">!</span>postal <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;AK&quot;</span>, <span class="st">&quot;HI&quot;</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>states <span class="ot">&lt;-</span> <span class="fu">ne_states</span>(<span class="at">iso_a2 =</span> <span class="st">&quot;US&quot;</span>, <span class="at">returnclass =</span> <span class="st">&quot;sf&quot;</span>) <span class="sc">|&gt;</span></span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>  <span class="fu">filter</span>(iso_a2 <span class="sc">==</span> <span class="st">&quot;US&quot;</span>, <span class="sc">!</span>postal <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;AK&quot;</span>, <span class="st">&quot;HI&quot;</span>)) <span class="sc">|&gt;</span></span>
 <span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>  <span class="fu">transmute</span>(<span class="at">state =</span> iso_3166_2)</span>
 <span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a></span>
 <span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a><span class="co"># convert fold-level trends estimates to sf format</span></span>
@@ -561,19 +568,19 @@ Thrasher.</p>
 <span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a>trends_sagthr_sf <span class="ot">&lt;-</span> <span class="fu">st_join</span>(trends_sagthr_sf, states, <span class="at">left =</span> <span class="cn">FALSE</span>)</span>
 <span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a></span>
 <span id="cb12-14"><a href="#cb12-14" tabindex="-1"></a><span class="co"># abundance-weighted average trend by region and fold</span></span>
-<span id="cb12-15"><a href="#cb12-15" tabindex="-1"></a>trends_states_folds <span class="ot">&lt;-</span> trends_sagthr_sf <span class="sc">%&gt;%</span></span>
-<span id="cb12-16"><a href="#cb12-16" tabindex="-1"></a>  <span class="fu">st_drop_geometry</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb12-17"><a href="#cb12-17" tabindex="-1"></a>  <span class="fu">group_by</span>(state, fold) <span class="sc">%&gt;%</span></span>
+<span id="cb12-15"><a href="#cb12-15" tabindex="-1"></a>trends_states_folds <span class="ot">&lt;-</span> trends_sagthr_sf <span class="sc">|&gt;</span></span>
+<span id="cb12-16"><a href="#cb12-16" tabindex="-1"></a>  <span class="fu">st_drop_geometry</span>() <span class="sc">|&gt;</span></span>
+<span id="cb12-17"><a href="#cb12-17" tabindex="-1"></a>  <span class="fu">group_by</span>(state, fold) <span class="sc">|&gt;</span></span>
 <span id="cb12-18"><a href="#cb12-18" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">abd_ppy =</span> <span class="fu">sum</span>(abd <span class="sc">*</span> abd_ppy) <span class="sc">/</span> <span class="fu">sum</span>(abd),</span>
 <span id="cb12-19"><a href="#cb12-19" tabindex="-1"></a>            <span class="at">.groups =</span> <span class="st">&quot;drop&quot;</span>)</span>
 <span id="cb12-20"><a href="#cb12-20" tabindex="-1"></a></span>
 <span id="cb12-21"><a href="#cb12-21" tabindex="-1"></a><span class="co"># summarize across folds for each state</span></span>
-<span id="cb12-22"><a href="#cb12-22" tabindex="-1"></a>trends_states <span class="ot">&lt;-</span> trends_states_folds <span class="sc">%&gt;%</span> </span>
-<span id="cb12-23"><a href="#cb12-23" tabindex="-1"></a>  <span class="fu">group_by</span>(state) <span class="sc">%&gt;%</span></span>
+<span id="cb12-22"><a href="#cb12-22" tabindex="-1"></a>trends_states <span class="ot">&lt;-</span> trends_states_folds <span class="sc">|&gt;</span> </span>
+<span id="cb12-23"><a href="#cb12-23" tabindex="-1"></a>  <span class="fu">group_by</span>(state) <span class="sc">|&gt;</span></span>
 <span id="cb12-24"><a href="#cb12-24" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">abd_ppy_median =</span> <span class="fu">median</span>(abd_ppy, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
 <span id="cb12-25"><a href="#cb12-25" tabindex="-1"></a>            <span class="at">abd_ppy_lower =</span> <span class="fu">quantile</span>(abd_ppy, <span class="fl">0.10</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
 <span id="cb12-26"><a href="#cb12-26" tabindex="-1"></a>            <span class="at">abd_ppy_upper =</span> <span class="fu">quantile</span>(abd_ppy, <span class="fl">0.90</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb12-27"><a href="#cb12-27" tabindex="-1"></a>            <span class="at">.groups =</span> <span class="st">&quot;drop&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb12-27"><a href="#cb12-27" tabindex="-1"></a>            <span class="at">.groups =</span> <span class="st">&quot;drop&quot;</span>) <span class="sc">|&gt;</span> </span>
 <span id="cb12-28"><a href="#cb12-28" tabindex="-1"></a>  <span class="fu">arrange</span>(abd_ppy_median)</span></code></pre></div>
 <p>We can join these state-level trends back to the state boundaries and
 make a map with <code>ggplot2</code>.</p>
@@ -605,7 +612,7 @@ estimate of the trend in the sagebrush bird community. First let’s look
 at the model information to ensure all species are modeled for the same
 region, season, and range of years.</p>
 <div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a>sagebrush_species <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;Brewer&#39;s Sparrow&quot;</span>, <span class="st">&quot;Sagebrush Sparrow&quot;</span>, <span class="st">&quot;Sage Thrasher&quot;</span>)</span>
-<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a>trends_runs <span class="sc">%&gt;%</span> </span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a>trends_runs <span class="sc">|&gt;</span> </span>
 <span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a>  <span class="fu">filter</span>(common_name <span class="sc">%in%</span> sagebrush_species)</span></code></pre></div>
 <p>Everything looks good, so we can proceed to compare trends for these
 species. Next we need to download the trends data for these species.
@@ -616,8 +623,8 @@ won’t be re-downloaded here.</p>
 <div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a>trends_sagebrush_species <span class="ot">&lt;-</span> <span class="fu">load_trends</span>(sagebrush_species)</span>
 <span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a></span>
 <span id="cb16-3"><a href="#cb16-3" tabindex="-1"></a><span class="co"># calculate mean trend for each cell</span></span>
-<span id="cb16-4"><a href="#cb16-4" tabindex="-1"></a>trends_sagebrush <span class="ot">&lt;-</span> trends_sagebrush_species <span class="sc">%&gt;%</span> </span>
-<span id="cb16-5"><a href="#cb16-5" tabindex="-1"></a>  <span class="fu">group_by</span>(srd_id, latitude, longitude) <span class="sc">%&gt;%</span> </span>
+<span id="cb16-4"><a href="#cb16-4" tabindex="-1"></a>trends_sagebrush <span class="ot">&lt;-</span> trends_sagebrush_species <span class="sc">|&gt;</span> </span>
+<span id="cb16-5"><a href="#cb16-5" tabindex="-1"></a>  <span class="fu">group_by</span>(srd_id, latitude, longitude) <span class="sc">|&gt;</span> </span>
 <span id="cb16-6"><a href="#cb16-6" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">n_species =</span> <span class="fu">n</span>(),</span>
 <span id="cb16-7"><a href="#cb16-7" tabindex="-1"></a>            <span class="at">abd_ppy =</span> <span class="fu">mean</span>(abd_ppy, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
 <span id="cb16-8"><a href="#cb16-8" tabindex="-1"></a>            <span class="at">.groups =</span> <span class="st">&quot;drop&quot;</span>)</span>
@@ -625,8 +632,8 @@ won’t be re-downloaded here.</p>
 <p>Finally, let’s make a map of these sagebrush trends, focusing only on
 those cells where all three species occur.</p>
 <div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a><span class="co"># convert the points to sf format</span></span>
-<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a>all_species <span class="ot">&lt;-</span> trends_sagebrush <span class="sc">%&gt;%</span> </span>
-<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a>  <span class="fu">filter</span>(n_species <span class="sc">==</span> <span class="fu">length</span>(sagebrush_species)) <span class="sc">%&gt;%</span> </span>
+<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a>all_species <span class="ot">&lt;-</span> trends_sagebrush <span class="sc">|&gt;</span> </span>
+<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a>  <span class="fu">filter</span>(n_species <span class="sc">==</span> <span class="fu">length</span>(sagebrush_species)) <span class="sc">|&gt;</span> </span>
 <span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a>  <span class="fu">st_as_sf</span>(<span class="at">coords =</span> <span class="fu">c</span>(<span class="st">&quot;longitude&quot;</span>, <span class="st">&quot;latitude&quot;</span>),</span>
 <span id="cb17-5"><a href="#cb17-5" tabindex="-1"></a>           <span class="at">crs =</span> <span class="dv">4326</span>)</span>
 <span id="cb17-6"><a href="#cb17-6" tabindex="-1"></a></span>

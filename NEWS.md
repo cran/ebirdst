@@ -1,3 +1,11 @@
+# ebirdst 3.2023.0
+
+- update for 2023 data release
+- add capability to download and load data coverage layers
+- Northern Goshawk species code was incorrect
+- on some VPNs downloading from https raises an error, switch to http in these cases
+- update vignettes: add links to YouTube, expand applications, add API vignette
+
 # ebirdst 3.2022.3
 
 - arrow is back on CRAN, move from Suggests back to Imports

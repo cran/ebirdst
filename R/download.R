@@ -98,9 +98,9 @@ ebirdst_download_status <- function(species,
             is_flag(download_pis),
             is_flag(download_ppms),
             is_flag(download_all))
+  stopifnot(is_flag(dry_run))
   stopifnot(is_flag(force))
   stopifnot(is_flag(show_progress))
-  stopifnot(is_flag(dry_run))
 
   # convert to species code
   species <- get_species(species)
@@ -110,9 +110,13 @@ ebirdst_download_status <- function(species,
   }
 
   # complete list of all available files for this species
-  files <- get_download_file_list(species_code = species, path = path)
+  files <- get_download_file_list(species_code = species,
+                                  path = path,
+                                  dataset = "status")
   # path to data package
-  run_path <- file.path(path, ebirdst_version()[["version_year"]], species)
+  run_path <- file.path(path,
+                        ebirdst_version()[["status_version_year"]],
+                        species)
 
   # decide which files to download
   # always download config file
@@ -243,9 +247,11 @@ ebirdst_download_trends <- function(species,
   run_paths <- character()
   for (s in species_code) {
     # complete list of all available files for this species
-    files <- get_download_file_list(species_code = s, path = path)
+    files <- get_download_file_list(species_code = s,
+                                    path = path,
+                                    dataset = "trends")
     # path to data package
-    run_path <- file.path(path, ebirdst_version()[["version_year"]], s)
+    run_path <- file.path(path, ebirdst_version()[["trends_version_year"]], s)
 
     # only trends files
     files <- files[stringr::str_detect(files$file, "/trends/"), ]
@@ -262,6 +268,77 @@ ebirdst_download_trends <- function(species,
 }
 
 
+#' Download eBird Status and Trends Data Coverage Products
+#'
+#' In addition to the species-specific data products, the eBird Status data
+#' products include two products providing estimates of weekly data coverage at
+#' 3 km spatial resolution: site selection probability and spatial coverage.
+#' This function downloads these data products in raster GeoTIFF format.
+#'
+#' @inheritParams ebirdst_download_status
+#'
+#' @return Path to the folder containing the downloaded data coverage products.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # download all data coverage products
+#' ebirdst_download_data_coverage()
+#'
+#' # download just the spatial coverage products
+#' ebirdst_download_data_coverage(pattern = "spatial-coverage")
+#'
+#' # download a single week of data coverage products
+#' ebirdst_download_data_coverage(pattern = "01-04")
+#'
+#' # download all weeks in april
+#' ebirdst_download_data_coverage(pattern = "04-")
+#' }
+ebirdst_download_data_coverage <- function(path = ebirdst_data_dir(),
+                                           pattern = NULL,
+                                           dry_run = FALSE,
+                                           force = FALSE,
+                                           show_progress = TRUE) {
+  stopifnot(is.character(path), length(path) == 1)
+  stopifnot(is_flag(dry_run))
+  stopifnot(is_flag(force))
+  stopifnot(is_flag(show_progress))
+
+  # complete list of all available files for this species
+  files <- get_download_file_list(species_code = "data_coverage", path = path)
+  # path to data package
+  run_path <- file.path(path,
+                        ebirdst_version()[["status_version_year"]],
+                        "data_coverage")
+
+  # apply pattern
+  if (!is.null(pattern)) {
+    stopifnot(is.character(pattern), length(pattern) == 1, !is.na(pattern))
+    pat_match <- stringr::str_detect(basename(files$file), pattern = pattern)
+    if (all(!pat_match)) {
+      stop("No files matched pattern")
+    }
+    files <- files[pat_match, ]
+  }
+
+  # print files to download for dry run
+  if (dry_run) {
+    message("Downloading Data Coverage Products to:\n  ", path)
+    message(paste(c("File list:", files$file), collapse = "\n  "))
+    return(invisible(files$file))
+  }
+
+  if (show_progress) {
+    message(stringr::str_glue("Downloading Data Coverage Products"))
+  }
+
+  download_files(files, force = force, show_progress = show_progress)
+
+  return(invisible(normalizePath(run_path)))
+
+}
+
+
 #' Get the path to the data package for a given species
 #'
 #' This helper function can be used to get the path to a data package for a
@@ -269,6 +346,8 @@ ebirdst_download_trends <- function(species,
 #'
 #' @param check_downloaded logical; raise an error if no data have been
 #'   downloaded for this species.
+#' @param dataset character; whether the path to the Status or Trends data
+#'   products should be returned.
 #' @inheritParams ebirdst_download_status
 #'
 #' @return The path to the data package directory.
@@ -286,18 +365,23 @@ ebirdst_download_trends <- function(species,
 #' path <- get_species_path("yebsap")
 #' }
 get_species_path <- function(species, path = ebirdst_data_dir(),
+                             dataset = c("status", "trends"),
                              check_downloaded = TRUE) {
   stopifnot(is.character(species), length(species) == 1)
   stopifnot(is.character(path), length(path) == 1, dir.exists(path))
   stopifnot(is_flag(check_downloaded))
+  dataset <- match.arg(dataset)
 
-  species_code <- get_species(species)
+  if (species == "data_coverage") {
+    species_code <- "data_coverage"
+  } else {
+    species_code <- get_species(species)
+  }
   if (is.na(species_code)) {
     stop(species, " does not correspond to a valid Status and Trends species.")
   }
-  species_path <- path.expand(file.path(path,
-                                        ebirdst_version()[["version_year"]],
-                                        species_code))
+  version_year <- ebirdst_version()[[paste0(dataset, "_version_year")]]
+  species_path <- path.expand(file.path(path, version_year, species_code))
   if (check_downloaded && !dir.exists(species_path)) {
     stop("No data package found for species: ", species)
   }
@@ -330,35 +414,33 @@ ebirdst_data_dir <- function() {
 #'
 #' Identify the version of the eBird Status and Trends Data Products that this
 #' version of the R package works with. Versions are defined by the year that
-#' all model estimates are made for. In addition, the release data and end date
-#' for access of this version of the data are provided. Note that after the
-#' given access end data you will no longer be able to download this version of
-#' the data and will be required to update the R package and transition to using
-#' a newer data version.
+#' all model estimates are made for.
 #'
-#' @return A list with three components: `version_year` is the year the model
-#'   estimates are made for in this version of the data, `release_year` is the
-#'   year this version of the data were released, and `access_end_date` is the
-#'   last date that users will be able to download this version of the data.
+#' @return A list with three components: `status_version_year` is the version year for
+#'   the eBird Status Data Products, `trends_version_year` is the version year for the
+#'   eBird Trends Data Products, `release_year` is the year this version of the
+#'   data were released.
 #' @export
 #'
 #' @examples
 #' ebirdst_version()
 ebirdst_version <- function() {
-  list(version_year = 2022,
-       release_year = 2023,
-       access_end_date = as.Date("2024-11-15"))
+  list(status_version_year = 2023,
+       trends_version_year = 2022,
+       release_year = 2025)
 }
 
 
 # internal ----
 
-get_download_file_list <- function(species_code, path) {
+get_download_file_list <- function(species_code, path,
+                                   dataset = c("status", "trends")) {
   stopifnot(is.character(species_code), length(species_code) == 1,
             !is.na(species_code))
+  dataset <- match.arg(dataset)
 
   # version of the data products that this package version corresponds to
-  version_year <- ebirdst_version()[["version_year"]]
+  version_year <- ebirdst_version()[[paste0(dataset, "_version_year")]]
   # example data or a full data package
   is_example <- (species_code == "yebsap-example")
 
@@ -370,7 +452,8 @@ get_download_file_list <- function(species_code, path) {
                       "ebird/ebirdst_example-data/main/",
                       "example-data/")
     # file list
-    fl <- system.file("extdata", "example-data_file-list.txt",
+    fl <- system.file("extdata",
+                      paste0("example-data_file-list_", dataset, ".txt"),
                       package = "ebirdst")
     files <- readLines(fl)
   } else {
@@ -385,10 +468,21 @@ get_download_file_list <- function(species_code, path) {
       jsonlite::read_json(list_obj_url, simplifyVector = TRUE)
     }), error = function(e) NULL)
     if (is.null(files)) {
-      stop("Cannot access Status and Trends data URL. Ensure that you have ",
-           "a working internet connection and a valid API key for the Status ",
-           "and Trends data. Note that the API keys expire after 6 month, so ",
-           "may need to update your key. Visit https://ebird.org/st/request")
+      # try http instead in case of ssl issues on vpn
+      api_url <- "http://st-download.ebird.org/v1"
+      # get file list for this species
+      list_obj_url <- stringr::str_glue("{api_url}/list-obj/{version_year}/",
+                                        "{species_code}?key={key}")
+      files <- tryCatch(suppressWarnings({
+        jsonlite::read_json(list_obj_url, simplifyVector = TRUE)
+      }), error = function(e) NULL)
+      if (is.null(files)) {
+        stop("Cannot access Status and Trends data URL. Ensure that you have ",
+             "a working internet connection and a valid API key for the ",
+             "Status and Trends data. Note that the API keys expire after ",
+             "6 month, so may need to update your key. ",
+             "Visit https://ebird.org/st/request")
+      }
     }
 
     # remove web_download folder
