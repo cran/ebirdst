@@ -18,14 +18,18 @@ calculate_mcc_f1 <- function(observed, predicted) {
   if (!requireNamespace("PresenceAbsence", quietly = TRUE)) {
     stop("Package 'PresenceAbsence' must be installed to use this function.")
   }
-  stopifnot(is.logical(observed) || all(observed %in% c(0L, 1L)),
-            is.logical(predicted) || all(predicted %in% c(0L, 1L)),
-            length(observed) == length(predicted))
+  stopifnot(
+    is.logical(observed) || all(observed %in% c(0L, 1L)),
+    is.logical(predicted) || all(predicted %in% c(0L, 1L)),
+    length(observed) == length(predicted)
+  )
 
   # confusion matrix
-  obs_pred <- data.frame(blank = "x",
-                         obs = as.numeric(observed),
-                         pred = as.numeric(predicted))
+  obs_pred <- data.frame(
+    blank = "x",
+    obs = as.numeric(observed),
+    pred = as.numeric(predicted)
+  )
   cmx <- PresenceAbsence::cmx(obs_pred, na.rm = TRUE)
   tp <- cmx[1, 1]
   fp <- cmx[1, 2]
@@ -33,13 +37,13 @@ calculate_mcc_f1 <- function(observed, predicted) {
   tn <- cmx[2, 2]
 
   # f1 score
-  p_pat <- tp / (tp + fp)
-  r_pat <- tp / (tp + fn)
-  f1 <- 2 * ((p_pat * r_pat) / (p_pat + r_pat))
+  p_pat <- if ((tp + fp) == 0) 0 else tp / (tp + fp)
+  r_pat <- if ((tp + fn) == 0) 0 else tp / (tp + fn)
+  f1 <- if ((p_pat + r_pat) == 0) 0 else 2 * ((p_pat * r_pat) / (p_pat + r_pat))
 
   # mcc
   mcc_denom <- sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn))
-  mcc <- ((tp * tn) - (fp * fn)) / mcc_denom
+  mcc <- if (mcc_denom == 0) 0 else ((tp * tn) - (fp * fn)) / mcc_denom
   return(list(f1 = f1, mcc = mcc))
 }
 
@@ -58,7 +62,8 @@ calculate_mcc_f1 <- function(observed, predicted) {
 date_to_st_week <- function(dates, version = 2022) {
   stopifnot(version %in% c(2021, 2022))
 
-  if (version == 2021) { # as used in ebirdst 2021 data release
+  if (version == 2021) {
+    # as used in ebirdst 2021 data release
     dv <- seq(from = 0, to = 1, length.out = 52 + 1)
     days <- (as.POSIXlt(dates)$yday + 0.5) / 366
     check_d <- function(x) {

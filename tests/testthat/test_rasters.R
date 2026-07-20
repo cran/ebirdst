@@ -4,9 +4,11 @@ skip_on_cran()
 
 test_that("load_raster()", {
   # weekly
-  abd <- load_raster("yebsap-example",
-                     product = "abundance",
-                     resolution = "27km")
+  abd <- load_raster(
+    "yebsap-example",
+    product = "abundance",
+    resolution = "27km"
+  )
   expect_is(abd, "SpatRaster")
   expect_equal(terra::nlyr(abd), 52)
 
@@ -15,20 +17,43 @@ test_that("load_raster()", {
   expect_is(as.Date(names(abd)), "Date")
 
   # seasonal
-  abd <- load_raster("yebsap-example",
-                     product = "abundance",
-                     period = "seasonal",
-                     resolution = "27km")
+  abd <- load_raster(
+    "yebsap-example",
+    product = "abundance",
+    period = "seasonal",
+    resolution = "27km"
+  )
   expect_is(abd, "SpatRaster")
   expect_equal(terra::nlyr(abd), 4)
-  expect_named(abd, c("breeding", "nonbreeding",
-                      "prebreeding_migration", "postbreeding_migration"))
+  expect_named(
+    abd,
+    c(
+      "breeding",
+      "nonbreeding",
+      "prebreeding_migration",
+      "postbreeding_migration"
+    )
+  )
 })
 
 test_that("load_raster() error", {
   # weekly
-  expect_error(load_raster("Yellow Warbler"))
+  expect_error(load_raster("XXXX"))
   expect_error(load_raster("yebsap-example", product = "abndnce"))
   expect_error(load_raster("yebsap-example", resolution = "57km"))
   expect_error(load_raster("yebsap-example", path = "/bad/path/"))
+})
+
+test_that("load_raster() downloads data on demand", {
+  tmp <- withr::local_tempdir()
+  abd <- suppressMessages(
+    load_raster(
+      "yebsap-example",
+      product = "abundance",
+      resolution = "27km",
+      path = tmp
+    )
+  )
+  expect_is(abd, "SpatRaster")
+  expect_equal(terra::nlyr(abd), 52)
 })

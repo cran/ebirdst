@@ -1,3 +1,13 @@
+# ebirdst 4.2023.0
+
+- Transition to having all the `load_*()` functions download directly rather than having to call `ebirdst_download_status()`
+- Converted vignettes to Quarto and moved them to website-only pkgdown articles; the package no longer ships built-in vignettes to CRAN (documentation lives at <https://ebird.github.io/ebirdst/>)
+- Add `ebirdst_regional_stats()` to load regional summary statistics for all species
+- Add `ebirdst_data_inventory()` and `ebirdst_delete()` to manage files downloaded by `ebirdst`
+- Move to air auto-formatting and jarl linting
+- Efficiency improvements for grid_sample()
+- `grid_sample_stratified()` gains a `cell_quantile_cap` argument to limit how many observations a single chronically over-sampled site (e.g. a bird feeder) can contribute
+
 # ebirdst 3.2023.1
 
 - added a function to generate abundance-scaled circles for trends
